@@ -253,24 +253,10 @@ module Lipgloss
         height = 0
         content = content.gsub("\r\n", "\n")
         content.split('\n').each do |line|
-          height += wrap_height(line, width)
+          wrapped = Cellwrap.wrap(Lipgloss::Text.strip_ansi(line), width)
+          height += wrapped.count('\n') + 1
         end
         height
-      end
-
-      private def wrap_height(line : String, width : Int32) : Int32
-        return 1 if line.empty?
-        current = 0
-        lines = 1
-        line.each_grapheme do |grapheme|
-          w = Lipgloss::Text.width(grapheme.to_s)
-          if current + w > width
-            lines += 1
-            current = 0
-          end
-          current += w
-        end
-        lines
       end
 
       private def max_column_widths : Array(Int32)
@@ -357,6 +343,7 @@ module Lipgloss
     class Table
       getter border : Border = Border.rounded
       getter border_style : Style = Style.new
+      getter base_style : Style = Style.new
 
       property? border_top : Bool = true
       property? border_bottom : Bool = true
@@ -456,6 +443,11 @@ module Lipgloss
         self
       end
 
+      def base_style(style : Style) : self
+        @base_style = style
+        self
+      end
+
       def width(w : Int32) : self
         @width = w
         self
@@ -470,6 +462,10 @@ module Lipgloss
       def offset(o : Int32) : self
         @offset = o
         self
+      end
+
+      def y_offset(o : Int32) : self
+        offset(o)
       end
 
       def wrap(v : Bool) : self
@@ -514,7 +510,7 @@ module Lipgloss
 
         io << bottom
 
-        Lipgloss::Style.new
+        @base_style
           .max_height(compute_height)
           .max_width(@width)
           .render(io.to_s)
@@ -563,7 +559,7 @@ module Lipgloss
             col.min = Math.max(col.min, content_width)
             col.max = Math.max(col.max, content_width)
             if (fw = style.width) > 0
-              col.fixed_width = Math.max(col.fixed_width, fw - total_h)
+              col.fixed_width = Math.max(col.fixed_width, fw)
             end
             resizer.columns[column_index] = col
 
@@ -715,17 +711,18 @@ module Lipgloss
 
         cells.map!(&.rstrip('\n'))
         sb << Lipgloss.join_horizontal(Lipgloss::Position::Top, cells)
-        sb << "\n"
+        sb << "\n" if index < @data.rows - 1 || @border_bottom
 
         if @border_row && index < @data.rows - 1 && !is_overflow
-          sb << @border_style.render(@border.middle_left)
+          sb << @border_style.render(@border.middle_left) if @border_left
           @widths.each_with_index do |col_width, column_index|
             sb << @border_style.render(@border.bottom * col_width)
             if column_index < @widths.size - 1 && @border_column
               sb << @border_style.render(@border.middle)
             end
           end
-          sb << @border_style.render(@border.middle_right) << "\n"
+          sb << @border_style.render(@border.middle_right) if @border_right
+          sb << "\n"
         end
 
         sb.to_s

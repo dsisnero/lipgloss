@@ -42,4 +42,12 @@ describe "Lipgloss parity: Canvas" do
 
     canvas.render.should eq(expected)
   end
+
+  it "updates canvas when mutating a cell returned from cell_at" do
+    canvas = Lipgloss::Canvas.new(4, 1)
+    cell = canvas.cell_at(1, 0)
+    cell.content = "X"
+
+    canvas.render.should eq(" X")
+  end
 end

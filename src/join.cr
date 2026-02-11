@@ -65,12 +65,9 @@ module Lipgloss
             line = lines[row_index]
             io << line
 
-            # Pad horizontal to block width so the next block aligns correctly
-            if block_index < blocks.size - 1
-              line_width = Text.width(line)
-              pad = max_widths[block_index] - line_width
-              io << " " * pad if pad > 0
-            end
+            line_width = Text.width(line)
+            pad = max_widths[block_index] - line_width
+            io << " " * pad if pad > 0
           end
           io << '\n' unless row_index == max_height - 1
         end
@@ -105,11 +102,9 @@ module Lipgloss
           blocks.each_with_index do |lines, block_index|
             line = lines[row_index]
             io << line
-            if block_index < blocks.size - 1
-              line_width = Text.width(line)
-              pad = max_widths[block_index] - line_width
-              io << " " * pad if pad > 0
-            end
+            line_width = Text.width(line)
+            pad = max_widths[block_index] - line_width
+            io << " " * pad if pad > 0
           end
           io << '\n' unless row_index == max_height - 1
         end

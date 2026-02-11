@@ -4,10 +4,21 @@ require "./range"
 require "./style"
 
 module Lipgloss
-  struct Cell
-    getter content : String
+  class Cell
+    @content : String
+    @on_change : Proc(String, Nil)?
 
-    def initialize(@content : String = " ")
+    def initialize(@content : String = " ", @on_change : Proc(String, Nil)? = nil)
+    end
+
+    def content : String
+      @content
+    end
+
+    def content=(value : String) : String
+      @content = value
+      @on_change.try &.call(value)
+      value
     end
   end
 
@@ -48,7 +59,7 @@ module Lipgloss
     def cell_at(x : Int32, y : Int32) : Cell
       return Cell.new if x < 0 || y < 0 || y >= @height || x >= @width
       line = @lines[y]
-      Cell.new(ansi_cut(line, x, x + 1))
+      Cell.new(ansi_cut(line, x, x + 1), ->(content : String) { set_cell(x, y, Cell.new(content)) })
     end
 
     def set_cell(x : Int32, y : Int32, cell : Cell) : Nil

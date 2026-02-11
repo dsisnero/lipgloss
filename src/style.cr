@@ -546,6 +546,10 @@ module Lipgloss
       return true if (0x1DC0..0x1DFF).includes?(cp)
       return true if (0x20D0..0x20FF).includes?(cp)
       return true if (0xFE20..0xFE2F).includes?(cp)
+      return true if (0x0610..0x061A).includes?(cp)
+      return true if (0x064B..0x065F).includes?(cp)
+      return true if cp == 0x0670
+      return true if (0x06D6..0x06ED).includes?(cp)
 
       return true if cp == 0x0E31
       return true if (0x0E34..0x0E3A).includes?(cp)
@@ -598,6 +602,14 @@ module Lipgloss
 
   # NoColor represents the explicit absence of color styling.
   struct NoColor
+  end
+
+  enum UnderlineStyle
+    None
+    Double
+    Curly
+    Dotted
+    Dashed
   end
 
   # Style is the core styling primitive - a complete Lipgloss port
@@ -654,6 +666,9 @@ module Lipgloss
       MaxHeight
       TabWidth
       Transform
+      PaddingChar
+      Hyperlink
+      UnderlineStyle
     end
 
     @props : Props = Props::None
@@ -720,6 +735,10 @@ module Lipgloss
     # Other
     @tab_width : Int32 = TAB_WIDTH_DEFAULT
     @transform : Proc(String, String)? = nil
+    @padding_char : Char = ' '
+    @hyperlink_url : String? = nil
+    @hyperlink_params : String = ""
+    @underline_style : UnderlineStyle = UnderlineStyle::None
 
     # StyleRenderer for lipgloss-like color/profile behavior
     @style_renderer : StyleRenderer = StyleRenderer.default
@@ -1097,6 +1116,25 @@ module Lipgloss
       self
     end
 
+    def padding_char(char : Char) : Style
+      @padding_char = char
+      @props |= Props::PaddingChar
+      self
+    end
+
+    def underline_style(style : UnderlineStyle) : Style
+      @underline_style = style
+      @props |= Props::UnderlineStyle
+      self
+    end
+
+    def hyperlink(url : String, params : String = "") : Style
+      @hyperlink_url = url
+      @hyperlink_params = params
+      @props |= Props::Hyperlink
+      self
+    end
+
     # SetString sets the underlying string value for the style
     @[Deprecated("Use `string=` instead")]
     def string(*strs : String) : Style
@@ -1406,6 +1444,10 @@ module Lipgloss
       @tab_width
     end
 
+    def padding_char : Char
+      @padding_char
+    end
+
     def transform : Proc(String, String)?
       @transform
     end
@@ -1636,9 +1678,25 @@ module Lipgloss
       unset(Props::TabWidth)
     end
 
+    def unset_padding_char : Style
+      @padding_char = ' '
+      unset(Props::PaddingChar)
+    end
+
     def unset_transform : Style
       @transform = nil
       unset(Props::Transform)
+    end
+
+    def unset_hyperlink : Style
+      @hyperlink_url = nil
+      @hyperlink_params = ""
+      unset(Props::Hyperlink)
+    end
+
+    def unset_underline_style : Style
+      @underline_style = UnderlineStyle::None
+      unset(Props::UnderlineStyle)
     end
 
     def unset_string : Style
@@ -1995,8 +2053,10 @@ module Lipgloss
       str =
         if strs.empty?
           @value
-        else
+        elsif @value.empty?
           strs.join(" ")
+        else
+          "#{@value} #{strs.join(" ")}"
         end
       render_string(str)
     end
@@ -2053,9 +2113,21 @@ module Lipgloss
         str = str.gsub("\n", "")
       end
 
+      border_width = 0
+      border_height = 0
+      if !inline_val && set?(Props::BorderStyle)
+        border_width += 1 if border_left?
+        border_width += 1 if border_right?
+        border_height += 1 if border_top?
+        border_height += 1 if border_bottom?
+      end
+
+      content_width_val = width_val > 0 ? Math.max(width_val - border_width, 0) : 0
+      content_height_val = height_val > 0 ? Math.max(height_val - border_height, 0) : 0
+
       # Word wrap if width is set
-      if !inline_val && width_val > 0
-        wrap_at = width_val - left_padding - right_padding
+      if !inline_val && content_width_val > 0
+        wrap_at = content_width_val - left_padding - right_padding
         str = self.class.word_wrap_cached(str, wrap_at) if wrap_at > 0
       end
 
@@ -2073,6 +2145,7 @@ module Lipgloss
       if bg
         base_codes.concat(bg.background_codes)
       end
+      base_code_strings = base_codes.map(&.to_s)
 
       # Lip Gloss applies underline/strikethrough on a per-rune basis when
       # space styling is enabled, which also affects escape sequences.
@@ -2087,17 +2160,17 @@ module Lipgloss
         str = lines.map do |line|
           String.build do |io|
             line.each_char do |char|
-              codes = base_codes.dup
+              codes = base_code_strings.dup
 
               if char.whitespace?
-                codes << 4 if underline_spaces
-                codes << 9 if strikethrough_spaces
+                codes << "4" if underline_spaces
+                codes << "9" if strikethrough_spaces
               else
                 if underline_val
-                  codes << 4
-                  codes << 4
+                  codes << "4"
+                  codes << (underline_style_code || "4")
                 end
-                codes << 9 if strikethrough_val
+                codes << "9" if strikethrough_val
               end
 
               if codes.empty?
@@ -2109,9 +2182,12 @@ module Lipgloss
           end
         end.join('\n')
       else
-        codes = base_codes.dup
-        codes << 4 if underline_val
-        codes << 9 if strikethrough_val
+        codes = base_code_strings.dup
+        if underline_val
+          codes << "4"
+          codes << (underline_style_code || "4")
+        end
+        codes << "9" if strikethrough_val
 
         if !codes.empty?
           lines = str.split('\n')
@@ -2129,32 +2205,33 @@ module Lipgloss
       if !inline_val
         if left_padding > 0 || right_padding > 0
           lines = str.split('\n')
-          left_str = " " * left_padding
-          right_str = " " * right_padding
+          pad_char = @padding_char.to_s
+          left_str = pad_char * left_padding
+          right_str = pad_char * right_padding
           str = lines.map { |line| "#{left_str}#{line}#{right_str}" }.join('\n')
         end
 
         if top_padding > 0
           width_for_pad = str.split('\n').max_of? { |line| Text.width(line) } || 0
-          empty_line = " " * width_for_pad
+          empty_line = @padding_char.to_s * width_for_pad
           str = (Array.new(top_padding, empty_line).join('\n')) + "\n" + str
         end
 
         if bottom_padding > 0
           width_for_pad = str.split('\n').max_of? { |line| Text.width(line) } || 0
-          empty_line = " " * width_for_pad
+          empty_line = @padding_char.to_s * width_for_pad
           str = str + "\n" + (Array.new(bottom_padding, empty_line).join('\n'))
         end
       end
 
       # Apply height
-      if height_val > 0
-        str = align_text_vertical(str, @align_vertical, height_val)
+      if content_height_val > 0
+        str = align_text_vertical(str, @align_vertical, content_height_val)
       end
 
       # Apply width/alignment
-      if width_val > 0 || str.includes?('\n')
-        str = align_text_horizontal(str, @align_horizontal, width_val)
+      if content_width_val > 0 || str.includes?('\n')
+        str = align_text_horizontal(str, @align_horizontal, content_width_val)
       end
 
       # Apply border
@@ -2179,6 +2256,15 @@ module Lipgloss
         if lines.size > max_height_val
           str = lines[0, max_height_val].join('\n')
         end
+      end
+
+      if set?(Props::Hyperlink) && (url = @hyperlink_url)
+        open = if @hyperlink_params.empty?
+                 "\e]8;;#{url}\a"
+               else
+                 "\e]8;#{@hyperlink_params};#{url}\a"
+               end
+        str = "#{open}#{str}\e]8;;\a"
       end
 
       str
@@ -2206,6 +2292,10 @@ module Lipgloss
 
     private def unset(prop : Props) : Style
       @props &= ~prop
+      bit = prop.value.trailing_zeros_count
+      if bit < 32
+        @attrs &= ~(1u32 << bit)
+      end
       self
     end
 
@@ -2219,6 +2309,23 @@ module Lipgloss
       if !set?(prop) && other.set?(prop)
         block.call(color)
         @props |= prop
+      end
+    end
+
+    private def underline_style_code : String?
+      return nil unless set?(Props::UnderlineStyle)
+
+      case @underline_style
+      when UnderlineStyle::Double
+        "4:2"
+      when UnderlineStyle::Curly
+        "4:3"
+      when UnderlineStyle::Dotted
+        "4:4"
+      when UnderlineStyle::Dashed
+        "4:5"
+      else
+        nil
       end
     end
 

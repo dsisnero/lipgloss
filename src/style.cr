@@ -613,7 +613,7 @@ module Lipgloss
   end
 
   # Style is the core styling primitive - a complete Lipgloss port
-  class Style
+  struct Style
     WRAP_CACHE_MAX = 256
 
     @@wrap_cache = Hash(Tuple(String, Int32), String).new
@@ -1807,9 +1807,7 @@ module Lipgloss
     # ========== COPY ==========
 
     def copy : Style
-      new_style = Style.new
-      copy_to(new_style)
-      new_style
+      self
     end
 
     # Merge another style into this one

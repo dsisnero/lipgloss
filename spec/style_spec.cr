@@ -124,6 +124,15 @@ describe "Lipgloss parity: style rendering" do
     copied.tab_width.should eq(source.tab_width)
   end
 
+  it "matches value-copy assignment semantics" do
+    style = Lipgloss::Style.new.bold(true)
+    copy = style
+    copy.bold(false)
+
+    style.bold?.should be_true
+    copy.bold?.should be_false
+  end
+
   it "unsets style properties" do
     style = Lipgloss::Style.new.bold(true)
     style.bold?.should be_true

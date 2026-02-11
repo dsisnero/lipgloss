@@ -1,7 +1,7 @@
 require "./style"
 
 module Lipgloss
-  class Style
+  struct Style
     # JoinHorizontal is a utility function for horizontally joining two
     # potentially multi-lined strings along a vertical axis.
     #

@@ -1,7 +1,7 @@
 require "./spec_helper"
 
 # Expose helper for testing private align method
-class Lipgloss::Style
+struct Lipgloss::Style
   def spec_align_text_vertical(str : String, pos : Lipgloss::Position, height : Int32) : String
     align_text_vertical(str, pos, height)
   end

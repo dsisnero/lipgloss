@@ -2784,62 +2784,129 @@ module Lipgloss
   end
 
   # Place content within a box of given dimensions
-  def self.place(width : Int32, height : Int32, h_pos : Position, v_pos : Position, content : String) : String
-    lines = content.split('\n')
-    content_height = lines.size
+  alias WhitespaceOption = Proc(Whitespace, Nil)
 
-    # Vertical placement
-    v_gap = height - content_height
-    if v_gap > 0
-      empty_line = " " * width
-      case v_pos
-      when Position::Bottom
-        lines = Array.new(v_gap, empty_line) + lines
-      when Position::Center
-        top = v_gap // 2
-        bottom = v_gap - top
-        lines = Array.new(top, empty_line) + lines + Array.new(bottom, empty_line)
-      else # Top
-        lines = lines + Array.new(v_gap, empty_line)
-      end
+  class Whitespace
+    property chars : String
+    property style_proc : Proc(String, String)
+
+    def initialize
+      @chars = " "
+      @style_proc = ->(value : String) { value }
     end
 
-    # Horizontal placement
-    result = lines.map do |line|
-      h_gap = width - Text.width(line)
-      if h_gap <= 0
-        line
+    def render(width : Int32) : String
+      return "" if width <= 0
+
+      chars = @chars.empty? ? " " : @chars
+      graphemes = chars.each_grapheme.map(&.to_s).to_a
+      graphemes = [" "] if graphemes.empty?
+
+      rendered = String.build do |io|
+        current = 0
+        index = 0
+        while current < width
+          glyph = graphemes[index]
+          glyph_width = Text.width(glyph)
+          glyph_width = 1 if glyph_width <= 0
+          break if current + glyph_width > width
+          io << glyph
+          current += glyph_width
+          index = (index + 1) % graphemes.size
+        end
+
+        short = width - current
+        io << (" " * short) if short > 0
+      end
+
+      @style_proc.call(rendered)
+    end
+  end
+
+  def self.with_whitespace_style(style : Style) : WhitespaceOption
+    ->(whitespace : Whitespace) { whitespace.style_proc = ->(value : String) { style.render(value) } }
+  end
+
+  def self.with_whitespace_chars(chars : String) : WhitespaceOption
+    ->(whitespace : Whitespace) { whitespace.chars = chars }
+  end
+
+  private def self.new_whitespace(opts : Array(WhitespaceOption)) : Whitespace
+    whitespace = Whitespace.new
+    opts.each(&.call(whitespace))
+    whitespace
+  end
+
+  private def self.position_value(pos : Position) : Float64
+    case pos
+    when Position::Left, Position::Top
+      0.0
+    when Position::Center
+      0.5
+    else
+      1.0
+    end
+  end
+
+  def self.place(width : Int32, height : Int32, h_pos : Position, v_pos : Position, content : String, *opts : WhitespaceOption) : String
+    place_vertical(height, v_pos, place_horizontal(width, h_pos, content, *opts), *opts)
+  end
+
+  def self.place_horizontal(width : Int32, pos : Position, content : String, *opts : WhitespaceOption) : String
+    lines = content.split('\n')
+    content_width = lines.max_of? { |line| Text.width(line) } || 0
+    gap = width - content_width
+    return content if gap <= 0
+
+    whitespace = new_whitespace(opts.to_a)
+    lines.map do |line|
+      short = Math.max(0, content_width - Text.width(line))
+      case pos
+      when Position::Left
+        line + whitespace.render(gap + short)
+      when Position::Right
+        whitespace.render(gap + short) + line
       else
-        case h_pos
-        when Position::Right
-          " " * h_gap + line
-        when Position::Center
-          left = h_gap // 2
-          right = h_gap - left
-          " " * left + line + " " * right
-        else # Left
-          line + " " * h_gap
+        total_gap = gap + short
+        split = (total_gap.to_f * position_value(pos)).round.to_i
+        left = total_gap - split
+        right = total_gap - left
+        whitespace.render(left) + line + whitespace.render(right)
+      end
+    end.join('\n')
+  end
+
+  def self.place_vertical(height : Int32, pos : Position, content : String, *opts : WhitespaceOption) : String
+    content_height = content.count('\n') + 1
+    gap = height - content_height
+    return content if gap <= 0
+
+    lines = content.split('\n')
+    width = lines.max_of? { |line| Text.width(line) } || 0
+    whitespace = new_whitespace(opts.to_a)
+    empty_line = whitespace.render(width)
+
+    case pos
+    when Position::Top
+      content + "\n" + Array.new(gap, empty_line).join('\n')
+    when Position::Bottom
+      Array.new(gap, empty_line).join('\n') + "\n" + content
+    else
+      split = (gap.to_f * position_value(pos)).round.to_i
+      top = gap - split
+      bottom = gap - top
+      String.build do |io|
+        if top > 0
+          io << Array.new(top, empty_line).join('\n')
+          io << '\n'
+        end
+        io << content
+        if bottom > 0
+          io << '\n'
+          io << Array.new(bottom, empty_line).join('\n')
         end
       end
     end
-
-    # Crop if needed
-    if result.size > height
-      result = result[0, height]
-    end
-
-    result.join('\n')
-  end
-
-  def self.place_horizontal(width : Int32, pos : Position, content : String) : String
-    height = content.split('\n').size
-    place(width, height, pos, Position::Top, content)
-  end
-
-  def self.place_vertical(height : Int32, pos : Position, content : String) : String
-    lines = content.split('\n')
-    width = lines.max_of? { |line| Text.width(line) } || 0
-    place(width, height, Position::Left, pos, content)
   end
 
   # Measure width of rendered string (max line width)

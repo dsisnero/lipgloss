@@ -12,10 +12,10 @@ describe "Lipgloss parity: style rendering" do
       {style: -> { Lipgloss::Style.new.renderer(renderer).underline_spaces(true) }, expected: "ab\e[4m \e[0mc"},
     ]
 
-    cases.each_with_index do |tc, idx|
-      s = tc[:style].call
+    cases.each_with_index do |test_case, index|
+      s = test_case[:style].call
       s.string = "ab c"
-      s.render.should eq(tc[:expected]), "case #{idx} failed"
+      s.render.should eq(test_case[:expected]), "case #{index} failed"
     end
   end
 
@@ -30,10 +30,10 @@ describe "Lipgloss parity: style rendering" do
       {style: -> { Lipgloss::Style.new.renderer(renderer).strikethrough_spaces(true) }, expected: "ab\e[9m \e[0mc"},
     ]
 
-    cases.each_with_index do |tc, idx|
-      s = tc[:style].call
+    cases.each_with_index do |test_case, index|
+      s = test_case[:style].call
       s.string = "ab c"
-      s.render.should eq(tc[:expected]), "case #{idx} failed"
+      s.render.should eq(test_case[:expected]), "case #{index} failed"
     end
   end
 end

@@ -28,8 +28,8 @@ describe "Lipgloss parity: align text vertical" do
       {str: "Foo\nBar\nBaz", pos: Lipgloss::Position::Center, height: 10, want: "\n\n\nFoo\nBar\nBaz\n\n\n\n"},
     ]
 
-    tests.each do |t|
-      Lipgloss::Style.new.spec_align_text_vertical(t[:str], t[:pos], t[:height]).should eq(t[:want])
+    tests.each do |test_case|
+      Lipgloss::Style.new.spec_align_text_vertical(test_case[:str], test_case[:pos], test_case[:height]).should eq(test_case[:want])
     end
   end
 end

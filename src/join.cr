@@ -34,7 +34,7 @@ module Lipgloss
       blocks = strs.map(&.split('\n'))
 
       # Calculate dimensions
-      max_widths = blocks.map { |lines| lines.max_of { |l| Text.width(l) } rescue 0 }
+      max_widths = blocks.map { |lines| lines.max_of { |line| Text.width(line) } rescue 0 }
       max_height = blocks.max_of(&.size) rescue 0
 
       # Normalize blocks to max_height by padding vertically
@@ -86,7 +86,7 @@ module Lipgloss
       return strs[0] if strs.size == 1
 
       blocks = strs.map(&.split('\n'))
-      max_widths = blocks.map { |lines| lines.max_of { |l| Text.width(l) } rescue 0 }
+      max_widths = blocks.map { |lines| lines.max_of { |line| Text.width(line) } rescue 0 }
       max_height = blocks.max_of(&.size) rescue 0
       ratio = pos.clamp(0.0, 1.0)
 
@@ -147,7 +147,7 @@ module Lipgloss
       blocks = strs.map(&.split('\n'))
 
       # Calculate the widest line across all blocks
-      max_width = blocks.max_of { |lines| lines.max_of { |l| Text.width(l) } rescue 0 } rescue 0
+      max_width = blocks.max_of { |lines| lines.max_of { |line| Text.width(line) } rescue 0 } rescue 0
 
       String.build do |io|
         blocks.each_with_index do |lines, i|
@@ -198,7 +198,7 @@ module Lipgloss
       return strs[0] if strs.size == 1
 
       blocks = strs.map(&.split('\n'))
-      max_width = blocks.max_of { |lines| lines.max_of { |l| Text.width(l) } rescue 0 } rescue 0
+      max_width = blocks.max_of { |lines| lines.max_of { |line| Text.width(line) } rescue 0 } rescue 0
       ratio = pos.clamp(0.0, 1.0)
 
       String.build do |io|

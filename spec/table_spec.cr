@@ -23,7 +23,7 @@ def table_style(row, col)
 end
 
 def add_rows(table : Table, rows : Enumerable(Enumerable(String)))
-  rows.each { |r| table.row(r) }
+  rows.each { |row| table.row(row) }
 end
 
 describe "Lipgloss parity: table renderer" do

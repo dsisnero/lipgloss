@@ -14,12 +14,12 @@ describe "Lipgloss parity: borders" do
       {name: "custom border", style: Lipgloss::Style.new.border_style(Lipgloss::Border.new(left: "123456789")), want_x: 1, want_y: 0},
     ]
 
-    tests.each do |t|
-      x = t[:style].get_horizontal_border_size
-      y = t[:style].get_vertical_border_size
-      {x, y}.should eq({t[:want_x], t[:want_y]}), t[:name]
-      {t[:style].get_horizontal_frame_size, t[:style].get_vertical_frame_size}.should eq({t[:want_x], t[:want_y]})
-      t[:style].get_frame_size.should eq({t[:want_x], t[:want_y]})
+    tests.each do |test_case|
+      x = test_case[:style].horizontal_border_size
+      y = test_case[:style].vertical_border_size
+      {x, y}.should eq({test_case[:want_x], test_case[:want_y]}), test_case[:name]
+      {test_case[:style].horizontal_frame_size, test_case[:style].vertical_frame_size}.should eq({test_case[:want_x], test_case[:want_y]})
+      test_case[:style].frame_size.should eq({test_case[:want_x], test_case[:want_y]})
     end
   end
 

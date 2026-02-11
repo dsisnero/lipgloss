@@ -60,19 +60,19 @@ module Lipgloss
 
       # Render joined blocks
       String.build do |io|
-        max_height.times do |i|
-          blocks.each_with_index do |lines, j|
-            line = lines[i]
+        max_height.times do |row_index|
+          blocks.each_with_index do |lines, block_index|
+            line = lines[row_index]
             io << line
 
             # Pad horizontal to block width so the next block aligns correctly
-            if j < blocks.size - 1
-              w = Text.width(line)
-              pad = max_widths[j] - w
+            if block_index < blocks.size - 1
+              line_width = Text.width(line)
+              pad = max_widths[block_index] - line_width
               io << " " * pad if pad > 0
             end
           end
-          io << '\n' unless i == max_height - 1
+          io << '\n' unless row_index == max_height - 1
         end
       end
     end
@@ -101,17 +101,17 @@ module Lipgloss
       end
 
       String.build do |io|
-        max_height.times do |i|
-          blocks.each_with_index do |lines, j|
-            line = lines[i]
+        max_height.times do |row_index|
+          blocks.each_with_index do |lines, block_index|
+            line = lines[row_index]
             io << line
-            if j < blocks.size - 1
-              w = Text.width(line)
-              pad = max_widths[j] - w
+            if block_index < blocks.size - 1
+              line_width = Text.width(line)
+              pad = max_widths[block_index] - line_width
               io << " " * pad if pad > 0
             end
           end
-          io << '\n' unless i == max_height - 1
+          io << '\n' unless row_index == max_height - 1
         end
       end
     end
@@ -150,10 +150,10 @@ module Lipgloss
       max_width = blocks.max_of { |lines| lines.max_of { |line| Text.width(line) } rescue 0 } rescue 0
 
       String.build do |io|
-        blocks.each_with_index do |lines, i|
-          lines.each_with_index do |line, j|
-            w = Text.width(line)
-            gap = max_width - w
+        blocks.each_with_index do |lines, block_index|
+          lines.each_with_index do |line, line_index|
+            line_width = Text.width(line)
+            gap = max_width - line_width
 
             if gap > 0
               case pos
@@ -178,8 +178,8 @@ module Lipgloss
             end
 
             # Add newline unless it's the very last line of the very last block
-            is_last_block = (i == blocks.size - 1)
-            is_last_line = (j == lines.size - 1)
+            is_last_block = (block_index == blocks.size - 1)
+            is_last_line = (line_index == lines.size - 1)
 
             unless is_last_block && is_last_line
               io << '\n'
@@ -202,10 +202,10 @@ module Lipgloss
       ratio = pos.clamp(0.0, 1.0)
 
       String.build do |io|
-        blocks.each_with_index do |lines, i|
-          lines.each_with_index do |line, j|
-            w = Text.width(line)
-            gap = max_width - w
+        blocks.each_with_index do |lines, block_index|
+          lines.each_with_index do |line, line_index|
+            line_width = Text.width(line)
+            gap = max_width - line_width
             left = (gap * ratio).round.to_i
             left = left.clamp(0, gap)
             right = gap - left
@@ -214,8 +214,8 @@ module Lipgloss
             io << line
             io << " " * right
 
-            is_last_block = (i == blocks.size - 1)
-            is_last_line = (j == lines.size - 1)
+            is_last_block = (block_index == blocks.size - 1)
+            is_last_line = (line_index == lines.size - 1)
             io << '\n' unless is_last_block && is_last_line
           end
         end

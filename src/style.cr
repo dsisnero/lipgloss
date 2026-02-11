@@ -2542,8 +2542,8 @@ module Lipgloss
     max_height = block_lines.max_of?(&.size) || 0
 
     # Pad each block
-    padded_blocks = block_lines.map_with_index do |lines, i|
-      width = block_widths[i]
+    padded_blocks = block_lines.map_with_index do |lines, block_index|
+      width = block_widths[block_index]
       height_diff = max_height - lines.size
       empty_line = " " * width
 
@@ -2567,8 +2567,8 @@ module Lipgloss
     end
 
     # Join horizontally
-    result = (0...max_height).map do |i|
-      padded_blocks.map { |block| block[i]? || "" }.join
+    result = (0...max_height).map do |row_index|
+      padded_blocks.map { |block| block[row_index]? || "" }.join
     end
 
     result.join('\n')
@@ -2586,8 +2586,8 @@ module Lipgloss
     block_widths = block_lines.map { |lines| lines.max_of? { |line| Text.width(line) } || 0 }
     max_height = block_lines.max_of?(&.size) || 0
 
-    padded_blocks = block_lines.map_with_index do |lines, i|
-      width = block_widths[i]
+    padded_blocks = block_lines.map_with_index do |lines, block_index|
+      width = block_widths[block_index]
       height_diff = max_height - lines.size
       top = (height_diff * ratio).round.to_i.clamp(0, height_diff)
       bottom = height_diff - top
@@ -2600,8 +2600,8 @@ module Lipgloss
       end
     end
 
-    result = (0...max_height).map do |i|
-      padded_blocks.map { |block| block[i]? || "" }.join
+    result = (0...max_height).map do |row_index|
+      padded_blocks.map { |block| block[row_index]? || "" }.join
     end
 
     result.join('\n')
@@ -2627,8 +2627,8 @@ module Lipgloss
   def self.join_vertical(pos : Position, blocks : Array(String)) : String
     return "" if blocks.empty?
 
-    max_width = blocks.max_of? do |b|
-      b.split('\n').max_of? { |line| Text.width(line) } || 0
+    max_width = blocks.max_of? do |block|
+      block.split('\n').max_of? { |line| Text.width(line) } || 0
     end || 0
 
     aligned = blocks.map do |block|
@@ -2658,8 +2658,8 @@ module Lipgloss
     return "" if blocks.empty?
     ratio = pos.clamp(0.0, 1.0)
 
-    max_width = blocks.max_of? do |b|
-      b.split('\n').max_of? { |line| Text.width(line) } || 0
+    max_width = blocks.max_of? do |block|
+      block.split('\n').max_of? { |line| Text.width(line) } || 0
     end || 0
 
     aligned = blocks.map do |block|
@@ -2751,8 +2751,8 @@ module Lipgloss
   # Get both width and height
   def self.size(str : String) : Tuple(Int32, Int32)
     lines = str.split('\n')
-    w = lines.max_of? { |line| Text.width(line) } || 0
-    {w, lines.size}
+    max_line_width = lines.max_of? { |line| Text.width(line) } || 0
+    {max_line_width, lines.size}
   end
 
   # Create a new style (convenience)

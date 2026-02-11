@@ -25,15 +25,16 @@ describe "Lipgloss parity: borders" do
 
   it "gets first rune" do
     cases = {
-      ""        => "",
-      "A"       => "A",
-      "世"       => "世",
-      "Hello"   => "H",
-      "你好世界"    => "你",
-      "Hello世界" => "H",
-      "世界Hello" => "世",
-      "😀Happy"  => "😀",
-      "ñoño"    => "ñ",
+      ""                                            => "",
+      "A"                                           => "A",
+      "世"                                           => "世",
+      "Hello"                                       => "H",
+      "你好世界"                                        => "你",
+      "Hello世界"                                     => "H",
+      "世界Hello"                                     => "世",
+      "😀Happy"                                      => "😀",
+      "ñoño"                                        => "ñ",
+      "The quick brown fox jumps over the lazy dog" => "T",
     }
     cases.each do |input, expect|
       Lipgloss.get_first_rune_as_string(input).should eq(expect)

@@ -73,7 +73,7 @@ module Lipgloss
     end
 
     def render : String
-      @lines.join("\n")
+      @lines.map(&.rstrip(' ')).join("\n")
     end
 
     def draw_string(str : String, x : Int32, y : Int32) : Nil

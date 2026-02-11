@@ -7,9 +7,6 @@ authors:
 dependencies:
   cellwrap:
     github: dsisnero/cellwrap
-  term2:
-    github: dsisnero/term2
-    branch: v2-exp
   textseg:
     github: naqvis/uni_text_seg
   uniwidth:

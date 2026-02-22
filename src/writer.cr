@@ -3,7 +3,8 @@ require "colorprofile"
 module Lipgloss
   # Writer that can be either a plain IO or a Colorprofile::Writer
   # This allows tests to use IO::Memory while production code uses Colorprofile::Writer
-  @@writer : IO | Colorprofile::Writer = Colorprofile::Writer.new(STDOUT, Colorprofile::Profile::TrueColor)
+  # Default writer automatically detects color profile like Go lipgloss
+  @@writer : IO | Colorprofile::Writer = Colorprofile.new_writer(STDOUT, nil)
 
   def self.writer : IO | Colorprofile::Writer
     @@writer

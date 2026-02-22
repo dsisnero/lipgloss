@@ -15,6 +15,8 @@ dependencies:
     github: dsisnero/ansi
   ultraviolet:
     github: dsisnero/ultraviolet
+  colorprofile:
+    github: dsisnero/colorprofile
   golden:
     github: dsisnero/golden
   colorful:

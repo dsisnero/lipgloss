@@ -1,11 +1,9 @@
+require "colorprofile"
+
 module Lipgloss
-  # ColorProfile specifies the terminal's color capabilities.
-  enum ColorProfile
-    ASCII     # No colors
-    ANSI      # 16 colors
-    ANSI256   # 256 colors
-    TrueColor # 16 million colors
-  end
+  # Alias to the colorprofile shard's Profile enum for compatibility
+  # Go lipgloss uses colorprofile.Profile with values: ANSI, ANSI256, TrueColor, ASCII, NoTTY
+  alias ColorProfile = Colorprofile::Profile
 
   # StyleRenderer provides lipgloss-compatible color profile management.
   class StyleRenderer

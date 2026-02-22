@@ -142,6 +142,45 @@ module Lipgloss
     )
   end
 
+  # CompleteFunc is a function that returns the appropriate color based on the
+  # given color profile.
+  #
+  # Example usage:
+  #   p = Colorprofile.detect(io, ENV.to_a)
+  #   complete = Lipgloss.complete(p)
+  #   color = complete.call(
+  #     Lipgloss.color("1"),     # ANSI
+  #     Lipgloss.color("124"),   # ANSI256
+  #     Lipgloss.color("#ff34ac") # TrueColor
+  #   )
+  alias CompleteFunc = Proc((Color | NoColor)?, (Color | NoColor)?, (Color | NoColor)?, (Color | NoColor)?)
+
+  # Complete returns a function that will return the appropriate color based on
+  # the given color profile.
+  #
+  # Example usage:
+  #   p = Colorprofile.detect(io, ENV.to_a)
+  #   complete = Lipgloss.complete(p)
+  #   color = complete.call(
+  #     Lipgloss.color("1"),     # ANSI
+  #     Lipgloss.color("124"),   # ANSI256
+  #     Lipgloss.color("#ff34ac") # TrueColor
+  #   )
+  def self.complete(profile : Colorprofile::Profile) : CompleteFunc
+    ->(ansi : (Color | NoColor)?, ansi256 : (Color | NoColor)?, truecolor : (Color | NoColor)?) do
+      case profile
+      when Colorprofile::Profile::ANSI
+        ansi
+      when Colorprofile::Profile::ANSI256
+        ansi256
+      when Colorprofile::Profile::TrueColor
+        truecolor
+      else
+        nil
+      end
+    end
+  end
+
   private def self.to_rgba(color : Color | RGBAColor) : {Int32, Int32, Int32, Int32}
     case color
     when Color

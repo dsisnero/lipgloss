@@ -1,5 +1,27 @@
+require "colorprofile"
+
 module Lipgloss
-  class_property writer : IO = STDOUT
+  # Writer that can be either a plain IO or a Colorprofile::Writer
+  # This allows tests to use IO::Memory while production code uses Colorprofile::Writer
+  @@writer : IO | Colorprofile::Writer = Colorprofile::Writer.new(STDOUT, Colorprofile::Profile::TrueColor)
+
+  def self.writer : IO | Colorprofile::Writer
+    @@writer
+  end
+
+  def self.writer=(w : IO | Colorprofile::Writer)
+    @@writer = w
+  end
+
+  # Helper to write to either IO or Colorprofile::Writer
+  private def self.write_to(io : IO | Colorprofile::Writer, value : String) : Nil
+    case io
+    when Colorprofile::Writer
+      io.write_string(value)
+    else
+      io << value
+    end
+  end
 
   private def self.stringify_args(args : Array) : String
     String.build do |io|
@@ -13,19 +35,19 @@ module Lipgloss
 
   def self.print(*args) : {Int32, Nil}
     value = stringify_args(args.to_a)
-    writer << value
+    write_to(writer, value)
     {value.bytesize, nil}
   end
 
   def self.println(*args) : {Int32, Nil}
     value = stringify_line_args(args.to_a) + "\n"
-    writer << value
+    write_to(writer, value)
     {value.bytesize, nil}
   end
 
   def self.printf(format : String, *args) : {Int32, Nil}
     value = format % args.to_a
-    writer << value
+    write_to(writer, value)
     {value.bytesize, nil}
   end
 

@@ -684,6 +684,8 @@ module Lipgloss
       BorderRightForeground
       BorderBottomForeground
       BorderLeftForeground
+      BorderForegroundBlend
+      BorderForegroundBlendOffset
       BorderTopBackground
       BorderRightBackground
       BorderBottomBackground
@@ -754,6 +756,8 @@ module Lipgloss
     @border_right_fg_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil = nil
     @border_bottom_fg_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil = nil
     @border_left_fg_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil = nil
+    @border_blend_fg_color : Array(Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor)? = nil
+    @border_foreground_blend_offset : Int32 = 0
     @border_top_bg_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil = nil
     @border_right_bg_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil = nil
     @border_bottom_bg_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil = nil
@@ -1058,11 +1062,14 @@ module Lipgloss
       set_bool(Props::BorderLeft, v)
     end
 
-    def border_foreground(c : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
-      @border_top_fg_color = c
-      @border_right_fg_color = c
-      @border_bottom_fg_color = c
-      @border_left_fg_color = c
+    def border_foreground(*colors : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
+      return self if colors.empty?
+      top, right, bottom, left, ok = which_sides_color(*colors)
+      return self unless ok
+      @border_top_fg_color = top
+      @border_right_fg_color = right
+      @border_bottom_fg_color = bottom
+      @border_left_fg_color = left
       @props |= Props::BorderTopForeground | Props::BorderRightForeground |
                 Props::BorderBottomForeground | Props::BorderLeftForeground
       self
@@ -1092,11 +1099,41 @@ module Lipgloss
       self
     end
 
-    def border_background(c : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
-      @border_top_bg_color = c
-      @border_right_bg_color = c
-      @border_bottom_bg_color = c
-      @border_left_bg_color = c
+    def border_foreground_blend(*colors : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
+      case colors.size
+      when 0
+        self
+      when 1
+        border_foreground(colors[0])
+      else
+        @border_blend_fg_color = colors.to_a
+        @props |= Props::BorderForegroundBlend
+        self
+      end
+    end
+
+    def border_foreground_blend_offset(v : Int32) : Style
+      @border_foreground_blend_offset = v
+      @props |= Props::BorderForegroundBlendOffset
+      self
+    end
+
+    def border_foreground_blend : Array(Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor)?
+      @border_blend_fg_color
+    end
+
+    def border_foreground_blend_offset : Int32
+      @border_foreground_blend_offset
+    end
+
+    def border_background(*colors : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
+      return self if colors.empty?
+      top, right, bottom, left, ok = which_sides_color(*colors)
+      return self unless ok
+      @border_top_bg_color = top
+      @border_right_bg_color = right
+      @border_bottom_bg_color = bottom
+      @border_left_bg_color = left
       @props |= Props::BorderTopBackground | Props::BorderRightBackground |
                 Props::BorderBottomBackground | Props::BorderLeftBackground
       self
@@ -1748,6 +1785,16 @@ module Lipgloss
     def unset_border_left_foreground : Style
       @border_left_fg_color = nil
       unset(Props::BorderLeftForeground)
+    end
+
+    def unset_border_foreground_blend : Style
+      @border_blend_fg_color = nil
+      unset(Props::BorderForegroundBlend)
+    end
+
+    def unset_border_foreground_blend_offset : Style
+      @border_foreground_blend_offset = 0
+      unset(Props::BorderForegroundBlendOffset)
     end
 
     def unset_border_background : Style
@@ -2419,6 +2466,37 @@ module Lipgloss
       if !set?(prop) && other.set?(prop)
         block.call(color)
         @props |= prop
+      end
+    end
+
+    private def which_sides_color(*colors : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : {Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil, Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil, Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil, Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil, Bool}
+      case colors.size
+      when 1
+        top = colors[0]
+        bottom = colors[0]
+        left = colors[0]
+        right = colors[0]
+        {top, right, bottom, left, true}
+      when 2
+        top = colors[0]
+        bottom = colors[0]
+        left = colors[1]
+        right = colors[1]
+        {top, right, bottom, left, true}
+      when 3
+        top = colors[0]
+        left = colors[1]
+        right = colors[1]
+        bottom = colors[2]
+        {top, right, bottom, left, true}
+      when 4
+        top = colors[0]
+        right = colors[1]
+        bottom = colors[2]
+        left = colors[3]
+        {top, right, bottom, left, true}
+      else
+        {nil, nil, nil, nil, false}
       end
     end
 

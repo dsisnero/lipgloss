@@ -8,11 +8,12 @@ export BEADS_DIR ?= $(PWD)/.beads
 build:
 	shards build
 
+
 install:
-	GIT_CONFIG_GLOBAL=/dev/null shards install
+	BEADS_DIR=$$(pwd)/.beads shards install
 
 update:
-	GIT_CONFIG_GLOBAL=/dev/null shards update
+	BEADS_DIR=$$(pwd)/.beads shards update
 
 # Run all tests (excluding interactive)
 spec:

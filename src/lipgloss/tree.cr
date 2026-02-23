@@ -10,6 +10,8 @@ module Lipgloss::Tree
     abstract def value=(value : String)
     abstract def children : Children
     abstract def hidden? : Bool
+    abstract def set_value(value) : Nil
+    abstract def set_hidden(hidden : Bool) : Nil
   end
 
   class Leaf
@@ -26,6 +28,14 @@ module Lipgloss::Tree
 
     def children : Children
       NodeChildren.new
+    end
+
+    def set_value(value) : Nil
+      assign_value(value)
+    end
+
+    def set_hidden(hidden : Bool) : Nil
+      @hidden = hidden
     end
 
     private def assign_value(value)
@@ -75,6 +85,14 @@ module Lipgloss::Tree
     def hide(hide : Bool) : Tree
       @hidden = hide
       self
+    end
+
+    def set_hidden(hidden : Bool) : Nil
+      @hidden = hidden
+    end
+
+    def set_value(value) : Nil
+      root(value)
     end
 
     def offset(start_idx : Int32, end_idx : Int32) : Tree
@@ -253,5 +271,9 @@ module Lipgloss::Tree
 
   def self.root(root_value) : Tree
     Tree.root(root_value)
+  end
+
+  def self.new_leaf(value = nil, hidden : Bool = false) : Leaf
+    Leaf.new(value, hidden)
   end
 end

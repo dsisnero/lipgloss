@@ -315,6 +315,61 @@ module Lipgloss
     nil
   end
 
+  # Border constructor functions matching Go lipgloss API
+
+  # NormalBorder returns a standard-type border with a normal weight and 90 degree corners.
+  def self.normal_border : Border
+    Border.normal
+  end
+
+  # RoundedBorder returns a border with rounded corners.
+  def self.rounded_border : Border
+    Border.rounded
+  end
+
+  # BlockBorder returns a border that takes the whole block.
+  def self.block_border : Border
+    Border.block
+  end
+
+  # OuterHalfBlockBorder returns a half-block border that sits outside the frame.
+  def self.outer_half_block_border : Border
+    Border.outer_half_block
+  end
+
+  # InnerHalfBlockBorder returns a half-block border that sits inside the frame.
+  def self.inner_half_block_border : Border
+    Border.inner_half_block
+  end
+
+  # ThickBorder returns a border that's thicker than the one returned by NormalBorder.
+  def self.thick_border : Border
+    Border.thick
+  end
+
+  # DoubleBorder returns a border comprised of two thin strokes.
+  def self.double_border : Border
+    Border.double
+  end
+
+  # HiddenBorder returns a border that renders as a series of single-cell spaces.
+  # It's useful for cases when you want to remove a standard border but maintain layout positioning.
+  def self.hidden_border : Border
+    Border.hidden
+  end
+
+  # MarkdownBorder returns a table border in markdown style.
+  # Make sure to disable top and bottom border for the best result. This will
+  # ensure that the output is valid markdown.
+  def self.markdown_border : Border
+    Border.markdown
+  end
+
+  # ASCIIBorder returns a table border with ASCII characters.
+  def self.ascii_border : Border
+    Border.ascii
+  end
+
   private def self.ensure_not_transparent(color : Color | RGBAColor) : RGBAColor
     rgba = to_rgba_color(color)
     return RGBAColor.new(rgba.r, rgba.g, rgba.b, 255_u8) if rgba.a == 0_u8

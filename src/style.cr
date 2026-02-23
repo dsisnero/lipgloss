@@ -99,27 +99,54 @@ module Lipgloss
     end
 
     def self.outer_half_block
-      new("▀", "▄", "▌", "▐", "▛", "▜", "▙", "▟", "▌", "▐", "┼", "▀", "▄")
+      new("▀", "▄", "▌", "▐", "▛", "▜", "▙", "▟", "", "", "", "", "")
     end
 
     def self.inner_half_block
-      new("▄", "▀", "▐", "▌", "▗", "▖", "▝", "▘", "▐", "▌", "┼", "▄", "▀")
+      new("▄", "▀", "▐", "▌", "▗", "▖", "▝", "▘", "", "", "", "", "")
+    end
+
+    def self.ascii
+      new("-", "-", "|", "|", "+", "+", "+", "+", "+", "+", "+", "+", "+")
+    end
+
+    def self.markdown
+      new("-", "-", "|", "|", "|", "|", "|", "|", "|", "|", "|", "|", "|")
+    end
+
+    private def max_rune_width(str : String) : Int32
+      return 0 if str.empty?
+      max_width = 0
+      str.each_grapheme do |grapheme|
+        w = UnicodeCharWidth.width(grapheme.to_s)
+        max_width = w if w > max_width
+      end
+      max_width
+    end
+
+    private def get_border_edge_width(*border_pieces : String) : Int32
+      max_width = 0
+      border_pieces.each do |piece|
+        w = max_rune_width(piece)
+        max_width = w if w > max_width
+      end
+      max_width
     end
 
     def top_size : Int32
-      @top.empty? ? 0 : 1
+      get_border_edge_width(@top_left, @top, @top_right)
     end
 
     def bottom_size : Int32
-      @bottom.empty? ? 0 : 1
+      get_border_edge_width(@bottom_left, @bottom, @bottom_right)
     end
 
     def left_size : Int32
-      @left.empty? ? 0 : 1
+      get_border_edge_width(@top_left, @left, @bottom_left)
     end
 
     def right_size : Int32
-      @right.empty? ? 0 : 1
+      get_border_edge_width(@top_right, @right, @bottom_right)
     end
   end
 
@@ -2848,27 +2875,26 @@ module Lipgloss
     end
   end
 
-  def self.place(width : Int32, height : Int32, h_pos : Position, v_pos : Position, content : String, *opts : WhitespaceOption) : String
-    place_vertical(height, v_pos, place_horizontal(width, h_pos, content, *opts), *opts)
+  private def self.position_value(pos : Float64) : Float64
+    Math.max(0.0, Math.min(1.0, pos))
   end
 
-  def self.place_horizontal(width : Int32, pos : Position, content : String, *opts : WhitespaceOption) : String
+  private def self.place_horizontal_with_value(width : Int32, pos_value : Float64, content : String, opts : Array(WhitespaceOption)) : String
     lines = content.split('\n')
     content_width = lines.max_of? { |line| Text.width(line) } || 0
     gap = width - content_width
     return content if gap <= 0
 
-    whitespace = new_whitespace(opts.to_a)
+    whitespace = new_whitespace(opts)
     lines.map do |line|
       short = Math.max(0, content_width - Text.width(line))
-      case pos
-      when Position::Left
+      if pos_value == 0.0
         line + whitespace.render(gap + short)
-      when Position::Right
+      elsif pos_value == 1.0
         whitespace.render(gap + short) + line
       else
         total_gap = gap + short
-        split = (total_gap.to_f * position_value(pos)).round.to_i
+        split = (total_gap.to_f * pos_value).round.to_i
         left = total_gap - split
         right = total_gap - left
         whitespace.render(left) + line + whitespace.render(right)
@@ -2876,23 +2902,22 @@ module Lipgloss
     end.join('\n')
   end
 
-  def self.place_vertical(height : Int32, pos : Position, content : String, *opts : WhitespaceOption) : String
+  private def self.place_vertical_with_value(height : Int32, pos_value : Float64, content : String, opts : Array(WhitespaceOption)) : String
     content_height = content.count('\n') + 1
     gap = height - content_height
     return content if gap <= 0
 
     lines = content.split('\n')
     width = lines.max_of? { |line| Text.width(line) } || 0
-    whitespace = new_whitespace(opts.to_a)
+    whitespace = new_whitespace(opts)
     empty_line = whitespace.render(width)
 
-    case pos
-    when Position::Top
+    if pos_value == 0.0
       content + "\n" + Array.new(gap, empty_line).join('\n')
-    when Position::Bottom
+    elsif pos_value == 1.0
       Array.new(gap, empty_line).join('\n') + "\n" + content
     else
-      split = (gap.to_f * position_value(pos)).round.to_i
+      split = (gap.to_f * pos_value).round.to_i
       top = gap - split
       bottom = gap - top
       String.build do |io|
@@ -2907,6 +2932,30 @@ module Lipgloss
         end
       end
     end
+  end
+
+  def self.place(width : Int32, height : Int32, h_pos : Position, v_pos : Position, content : String, *opts : WhitespaceOption) : String
+    place_vertical(height, v_pos, place_horizontal(width, h_pos, content, *opts), *opts)
+  end
+
+  def self.place(width : Int32, height : Int32, h_pos : Float64, v_pos : Float64, content : String, *opts : WhitespaceOption) : String
+    place_vertical(height, v_pos, place_horizontal(width, h_pos, content, *opts), *opts)
+  end
+
+  def self.place_horizontal(width : Int32, pos : Position, content : String, *opts : WhitespaceOption) : String
+    place_horizontal_with_value(width, position_value(pos), content, opts.to_a)
+  end
+
+  def self.place_horizontal(width : Int32, pos : Float64, content : String, *opts : WhitespaceOption) : String
+    place_horizontal_with_value(width, position_value(pos), content, opts.to_a)
+  end
+
+  def self.place_vertical(height : Int32, pos : Position, content : String, *opts : WhitespaceOption) : String
+    place_vertical_with_value(height, position_value(pos), content, opts.to_a)
+  end
+
+  def self.place_vertical(height : Int32, pos : Float64, content : String, *opts : WhitespaceOption) : String
+    place_vertical_with_value(height, position_value(pos), content, opts.to_a)
   end
 
   # Measure width of rendered string (max line width)

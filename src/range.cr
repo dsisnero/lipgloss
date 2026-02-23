@@ -18,6 +18,16 @@ module Lipgloss
     end
   end
 
+  # Create a new style range (factory method matching Go lipgloss)
+  def self.new_range(start : Int32, finish : Int32, style : Style) : Range
+    Range.new(start, finish, style)
+  end
+
+  # Apply styling to ranges in a string (variadic version matching Go lipgloss)
+  def self.style_ranges(str : String, *ranges : Range) : String
+    style_ranges(str, ranges.to_a)
+  end
+
   def self.style_ranges(str : String, ranges : Array(Range)) : String
     return str if ranges.empty?
     # NOTE: Ranges are in display-cell offsets on the ANSI-stripped string.

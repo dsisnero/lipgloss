@@ -696,6 +696,7 @@ module Lipgloss
       TabWidth
       Transform
       PaddingChar
+      MarginChar
       Hyperlink
       UnderlineStyle
     end
@@ -767,6 +768,7 @@ module Lipgloss
     @tab_width : Int32 = TAB_WIDTH_DEFAULT
     @transform : Proc(String, String)? = nil
     @padding_char : Char = ' '
+    @margin_char : Char = ' '
     @hyperlink_url : String? = nil
     @hyperlink_params : String = ""
     @underline_style : UnderlineStyle = UnderlineStyle::None
@@ -1186,6 +1188,12 @@ module Lipgloss
       self
     end
 
+    def margin_char(char : Char) : Style
+      @margin_char = char
+      @props |= Props::MarginChar
+      self
+    end
+
     def underline_style(style : UnderlineStyle) : Style
       @underline_style = style
       @props |= Props::UnderlineStyle
@@ -1555,6 +1563,10 @@ module Lipgloss
 
     def padding_char : Char
       @padding_char
+    end
+
+    def margin_char : Char
+      @margin_char
     end
 
     def transform : Proc(String, String)?

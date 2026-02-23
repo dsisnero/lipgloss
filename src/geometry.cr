@@ -1,9 +1,19 @@
+require "ultraviolet"
+
 module Lipgloss
   struct Point
     getter x : Int32
     getter y : Int32
 
     def initialize(@x : Int32, @y : Int32)
+    end
+
+    def to_uv : Ultraviolet::Position
+      Ultraviolet::Position.new(@x, @y)
+    end
+
+    def self.from_uv(pos : Ultraviolet::Position) : Point
+      Point.new(pos.x, pos.y)
     end
   end
 
@@ -56,6 +66,14 @@ module Lipgloss
       max_x = @max.x > other.max.x ? @max.x : other.max.x
       max_y = @max.y > other.max.y ? @max.y : other.max.y
       Rectangle.new(Point.new(min_x, min_y), Point.new(max_x, max_y))
+    end
+
+    def to_uv : Ultraviolet::Rectangle
+      Ultraviolet::Rectangle.new(@min.to_uv, @max.to_uv)
+    end
+
+    def self.from_uv(rect : Ultraviolet::Rectangle) : Rectangle
+      Rectangle.new(Point.from_uv(rect.min), Point.from_uv(rect.max))
     end
   end
 end

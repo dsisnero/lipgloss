@@ -6,13 +6,13 @@ describe "Lipgloss parity: Canvas" do
 
     (0...canvas.height).each do |y|
       (0...canvas.width).each do |x|
-        canvas.set_cell(x, y, Lipgloss::Cell.new("."))
+        canvas.set_cell(x, y, Ultraviolet::Cell.new("."))
       end
     end
 
     (1...2).each do |y|
       (1...4).each do |x|
-        canvas.set_cell(x, y, Lipgloss::Cell.new("#"))
+        canvas.set_cell(x, y, Ultraviolet::Cell.new("#"))
       end
     end
 
@@ -31,7 +31,7 @@ describe "Lipgloss parity: Canvas" do
     (0...canvas.height).each do |y|
       (0...canvas.width).each do |x|
         content = x < 3 ? "A" : " "
-        canvas.set_cell(x, y, Lipgloss::Cell.new(content))
+        canvas.set_cell(x, y, Ultraviolet::Cell.new(content))
       end
     end
 
@@ -43,10 +43,10 @@ describe "Lipgloss parity: Canvas" do
     canvas.render.should eq(expected)
   end
 
-  it "updates canvas when mutating a cell returned from cell_at" do
+  it "updates canvas when setting a cell" do
     canvas = Lipgloss::Canvas.new(4, 1)
-    cell = canvas.cell_at(1, 0)
-    cell.content = "X"
+    cell = Ultraviolet::Cell.new("X", 1)
+    canvas.set_cell(1, 0, cell)
 
     canvas.render.should eq(" X")
   end

@@ -1,6 +1,7 @@
 require "cellwrap"
 require "uniwidth"
 require "textseg"
+require "ultraviolet"
 
 require "./view"
 require "./color_profile"
@@ -154,6 +155,7 @@ module Lipgloss
   #     Lipgloss.color("#ff34ac") # TrueColor
   #   )
   alias CompleteFunc = Proc((Color | NoColor)?, (Color | NoColor)?, (Color | NoColor)?, (Color | NoColor)?)
+  alias LightDarkFunc = Proc((Color | RGBAColor | Nil), (Color | RGBAColor | Nil), (Color | RGBAColor | Nil))
 
   # Complete returns a function that will return the appropriate color based on
   # the given color profile.
@@ -526,5 +528,20 @@ module Lipgloss
   private def self.float_channel_to_u8(value : Float64) : UInt8
     clamped = clamp(value, 0.0, 1.0)
     (((clamped * 65535.0) + 0.5).to_i >> 8).clamp(0, 255).to_u8
+  end
+end
+
+# LightDark returns a function that selects between a light and dark color based
+# on the given boolean. If `is_dark` is true, the returned function will pick
+# the dark color; otherwise it will pick the light color.
+#
+# Example usage:
+#   has_dark_bg = Lipgloss.has_dark_background?
+#   light_dark = Lipgloss.light_dark(has_dark_bg)
+#   red, blue = Lipgloss.color("#ff0000"), Lipgloss.color("#0000ff")
+#   my_hot_color = light_dark.call(red, blue)
+def self.light_dark(is_dark : Bool) : LightDarkFunc
+  ->(light : Color | RGBAColor | Nil, dark : Color | RGBAColor | Nil) do
+    is_dark ? dark : light
   end
 end

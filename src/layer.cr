@@ -4,6 +4,8 @@ require "./geometry"
 module Lipgloss
   # Layer represents a visual layer with content and positioning.
   class Layer
+    include Ultraviolet::Drawable
+
     @id : String = ""
     @content : String
     @width : Int32 = 0
@@ -25,20 +27,12 @@ module Lipgloss
       @content
     end
 
-    def content : String
-      @content
-    end
-
     def width : Int32
       @width
     end
 
     def height : Int32
       @height
-    end
-
-    def id : String
-      @id
     end
 
     def id : String
@@ -115,8 +109,8 @@ module Lipgloss
       @layers
     end
 
-    def draw(scr : Canvas, area : Rectangle) : Nil
-      scr.draw_string(@content, area.min.x, area.min.y)
+    def draw(screen : Ultraviolet::Screen, area : Ultraviolet::Rectangle) : Nil
+      Ultraviolet::StyledString.new(@content).draw(screen, area)
     end
 
     protected def bounds_with_offset(parent_x : Int32, parent_y : Int32) : Rectangle
@@ -151,6 +145,8 @@ module Lipgloss
   end
 
   class Compositor
+    include Ultraviolet::Drawable
+
     @root : Layer
     @layers : Array(CompositeLayer) = [] of CompositeLayer
     @index : Hash(String, Layer) = {} of String => Layer
@@ -193,10 +189,11 @@ module Lipgloss
       @bounds
     end
 
-    def draw(scr : Canvas, area : Rectangle) : Nil
+    def draw(screen : Ultraviolet::Screen, area : Ultraviolet::Rectangle) : Nil
+      area_lip = Rectangle.from_uv(area)
       @layers.each do |composite_layer|
-        next unless composite_layer.bounds.overlaps?(area)
-        composite_layer.layer.draw(scr, composite_layer.bounds)
+        next unless composite_layer.bounds.overlaps?(area_lip)
+        composite_layer.layer.draw(screen, composite_layer.bounds.to_uv)
       end
     end
 

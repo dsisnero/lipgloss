@@ -695,6 +695,7 @@ module Lipgloss
       MarginChar
       Hyperlink
       UnderlineStyle
+      UnderlineColor
     end
 
     @props : Props = Props::None
@@ -768,6 +769,7 @@ module Lipgloss
     @hyperlink_url : String? = nil
     @hyperlink_params : String = ""
     @underline_style : UnderlineStyle = UnderlineStyle::None
+    @underline_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil = nil
 
     # StyleRenderer for lipgloss-like color/profile behavior
     @style_renderer : StyleRenderer = StyleRenderer.default
@@ -798,7 +800,11 @@ module Lipgloss
     end
 
     def underline(v : Bool = true) : Style
-      set_bool(Props::Underline, v)
+      if v
+        underline_style(UnderlineSingle)
+      else
+        underline_style(UnderlineNone)
+      end
     end
 
     def strikethrough(v : Bool = true) : Style
@@ -1196,6 +1202,16 @@ module Lipgloss
       self
     end
 
+    def underline_color(c : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
+      @underline_color = c
+      @props |= Props::UnderlineColor
+      self
+    end
+
+    def underline_color(hex : String) : Style
+      underline_color(Color.from_hex(hex))
+    end
+
     def hyperlink(url : String, params : String = "") : Style
       @hyperlink_url = url
       @hyperlink_params = params
@@ -1236,11 +1252,11 @@ module Lipgloss
     end
 
     def underline? : Bool
-      get_bool(Props::Underline)
+      @underline_style != UnderlineNone
     end
 
     def underline=(value : Bool) : Bool
-      set_bool(Props::Underline, value)
+      underline(value)
       value
     end
 
@@ -1468,6 +1484,10 @@ module Lipgloss
       @underline_style
     end
 
+    def underline_color : Color?
+      resolve_color(@underline_color)
+    end
+
     # Border color getters
     def border_top_foreground_color : Color?
       resolve_color(@border_top_fg_color)
@@ -1598,7 +1618,7 @@ module Lipgloss
     end
 
     def unset_underline : Style
-      unset(Props::Underline)
+      underline(false)
     end
 
     def unset_strikethrough : Style
@@ -1866,6 +1886,11 @@ module Lipgloss
       unset(Props::UnderlineStyle)
     end
 
+    def unset_underline_color : Style
+      @underline_color = nil
+      unset(Props::UnderlineColor)
+    end
+
     def unset_string : Style
       @value = ""
       self
@@ -1880,7 +1905,6 @@ module Lipgloss
       # Text attributes
       inherit_bool(Props::Bold, other) unless set?(Props::Bold)
       inherit_bool(Props::Italic, other) unless set?(Props::Italic)
-      inherit_bool(Props::Underline, other) unless set?(Props::Underline)
       inherit_bool(Props::Strikethrough, other) unless set?(Props::Strikethrough)
       inherit_bool(Props::Reverse, other) unless set?(Props::Reverse)
       inherit_bool(Props::Blink, other) unless set?(Props::Blink)
@@ -1925,6 +1949,18 @@ module Lipgloss
       if !set?(Props::AlignVertical) && other.set?(Props::AlignVertical)
         @align_vertical = other.@align_vertical
         @props |= Props::AlignVertical
+      end
+
+      # Underline style
+      if !set?(Props::UnderlineStyle) && other.set?(Props::UnderlineStyle)
+        @underline_style = other.@underline_style
+        @props |= Props::UnderlineStyle
+      end
+
+      # Underline color
+      if !set?(Props::UnderlineColor) && other.set?(Props::UnderlineColor)
+        @underline_color = other.@underline_color
+        @props |= Props::UnderlineColor
       end
 
       # Border style (but not border visibility)
@@ -1989,7 +2025,7 @@ module Lipgloss
     protected def merge_from(other : Style) : Nil
       # Merge text attributes (bold, italic, etc.) - copy attr bits for set props
       # For each attribute prop that's set in other, copy both the prop flag and attr bit
-      {% for prop in [:Bold, :Faint, :Italic, :Underline, :Blink, :Reverse, :Strikethrough] %}
+      {% for prop in [:Bold, :Faint, :Italic, :Blink, :Reverse, :Strikethrough] %}
         if other.@props.{{ prop.id.underscore }}?
           @props = Props.new(@props.value | Props::{{ prop.id }}.value)
           # Copy the attr bit from other
@@ -2084,6 +2120,18 @@ module Lipgloss
       if other.@props.border_style?
         @border_style = other.@border_style
         @props = Props.new(@props.value | Props::BorderStyle.value)
+      end
+
+      # Underline style
+      if other.@props.underline_style?
+        @underline_style = other.@underline_style
+        @props = Props.new(@props.value | Props::UnderlineStyle.value)
+      end
+
+      # Underline color
+      if other.@props.underline_color?
+        @underline_color = other.@underline_color
+        @props = Props.new(@props.value | Props::UnderlineColor.value)
       end
 
       # Border foreground colors
@@ -2243,7 +2291,7 @@ module Lipgloss
 
       bold = get_bool(Props::Bold)
       italic = get_bool(Props::Italic)
-      underline_val = get_bool(Props::Underline)
+      underline_val = @underline_style != UnderlineNone
       strikethrough_val = get_bool(Props::Strikethrough)
       reverse_val = get_bool(Props::Reverse)
       blink_val = get_bool(Props::Blink)

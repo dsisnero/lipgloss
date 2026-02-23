@@ -36,6 +36,19 @@ module Lipgloss
   # Underline style type alias
   alias Underline = Ansi::Style::Underline
 
+  # ANSI color type alias (indexed color)
+  alias ANSIColor = Int32
+
+  # RGB color struct (no alpha)
+  struct RGBColor
+    getter r : UInt8
+    getter g : UInt8
+    getter b : UInt8
+
+    def initialize(@r : UInt8, @g : UInt8, @b : UInt8)
+    end
+  end
+
   struct RGBAColor
     getter r : UInt8
     getter g : UInt8

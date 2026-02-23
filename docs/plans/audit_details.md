@@ -6,8 +6,8 @@ Generated 2026-02-22 19:06:26 -07:00
 
 ### `query.go`
 
-- [ ] `BackgroundColor`
-- [ ] `HasDarkBackground`
+- [x] `BackgroundColor` (implemented as `background_color`, returns Color instead of error tuple)
+- [x] `HasDarkBackground` (implemented as `has_dark_background`, uses IO arguments)
 
 ### `tree/children.go`
 
@@ -174,7 +174,7 @@ Generated 2026-02-22 19:06:26 -07:00
 
 ### `ansi_windows.go`
 
-- [ ] `EnableLegacyWindowsANSI`
+- [x] `EnableLegacyWindowsANSI` (implemented as `enable_legacy_windows_ansi`, no-op on non-Windows, stub on Windows)
 
 ### `writer.go`
 
@@ -529,7 +529,7 @@ Generated 2026-02-22 19:06:26 -07:00
 
 ### `ansi_unix.go`
 
-- [ ] `EnableLegacyWindowsANSI`
+- [x] `EnableLegacyWindowsANSI` (implemented as `enable_legacy_windows_ansi`, no-op on non-Windows, stub on Windows)
 
 ### `blending.go`
 

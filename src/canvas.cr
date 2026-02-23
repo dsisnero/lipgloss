@@ -56,6 +56,7 @@ module Lipgloss
     # Note: Unlike Go's *uv.Cell pointer, this returns a value type.
     # Mutating the returned cell does not update the buffer.
     # Use set_cell to modify the buffer.
+    # This is a known API difference from Go lipgloss.
     def cell_at(x : Int32, y : Int32) : Ultraviolet::Cell?
       @buffer.cell_at(x, y)
     end

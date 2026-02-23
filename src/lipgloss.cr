@@ -556,6 +556,23 @@ module Lipgloss
     clamped = clamp(value, 0.0, 1.0)
     (((clamped * 65535.0) + 0.5).to_i >> 8).clamp(0, 255).to_u8
   end
+
+  # EnableLegacyWindowsANSI enables support for ANSI color sequences in the
+  # Windows default console (cmd.exe and the PowerShell application). Note that
+  # this only works with Windows 10 and greater. Also note that Windows Terminal
+  # supports colors by default.
+  #
+  # This is a no-op on non-Windows platforms.
+  def self.enable_legacy_windows_ansi(file : IO) : Nil
+    {% if flag?(:win32) %}
+      # Windows implementation would go here
+      # Currently a no-op due to lack of Windows API bindings
+      nil
+    {% else %}
+      # Not needed on Unix platforms
+      nil
+    {% end %}
+  end
 end
 
 # LightDark returns a function that selects between a light and dark color based

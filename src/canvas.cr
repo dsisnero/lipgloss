@@ -91,29 +91,11 @@ module Lipgloss
     # It converts the string to Ultraviolet::Cell objects and sets them.
     def draw_string(str : String, x : Int32, y : Int32) : Nil
       return if width <= 0 || height <= 0
-
-      lines = str.split("\n", remove_empty: false)
-      lines.each_with_index do |line, idx|
-        draw_line(line, x, y + idx)
-      end
-    end
-
-    private def draw_line(line : String, x : Int32, y : Int32) : Nil
-      return if y < 0 || y >= height
-      return if line.empty?
-
-      col = x
-      # Simple implementation: create a cell for each grapheme
-      # TODO: Parse ANSI sequences and apply styling to cells
-      line.each_grapheme do |grapheme|
-        break if col >= width
-        next if col < 0
-
-        # Create a cell with the grapheme
-        cell = Ultraviolet::Cell.new_cell(width_method, grapheme)
-        set_cell(col, y, cell)
-        col += 1
-      end
+      bounds = Ultraviolet::Rectangle.new(
+        Ultraviolet::Position.new(x, y),
+        Ultraviolet::Position.new(@buffer.width, @buffer.height)
+      )
+      Ultraviolet.print_string(self, x, y, bounds, str, true, "")
     end
   end
 

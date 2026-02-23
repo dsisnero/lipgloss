@@ -47,9 +47,9 @@ module Lipgloss
 
     # Write writes to the buffer.
     def write(p : Bytes) : Int32
-      parser = @parser.not_nil!
+      parser = @parser
       p.each do |b|
-        parser.advance(b)
+        parser.advance(b) if parser
         if b == '\n'.ord
           unless @style.zero?
             @io << Ansi::ResetStyle

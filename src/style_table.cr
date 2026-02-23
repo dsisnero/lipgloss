@@ -122,6 +122,14 @@ module Lipgloss
       property? wrap : Bool = true
       property? border_column : Bool = true
       property y_paddings : Array(Array(Int32)) = [] of Array(Int32)
+      property y_offset : Int32 = 0
+      property? use_manual_height : Bool = false
+      property? border_top : Bool = true
+      property? border_bottom : Bool = true
+      property? border_left : Bool = true
+      property? border_right : Bool = true
+      property? border_header : Bool = true
+      property? border_row : Bool = false
 
       def initialize(@table_width : Int32, @table_height : Int32, @headers : Array(String), rows : Array(Array(String)))
         @all_rows = !headers.empty? ? rows.dup.unshift(headers) : rows.dup
@@ -330,6 +338,58 @@ module Lipgloss
         @columns.map(&.max)
       end
 
+      def visible_row_indexes : {Int32, Int32}
+        unless @use_manual_height
+          return {0, -2}
+        end
+
+        has_headers = !@headers.empty?
+
+        # XXX(@andreynering): There are known edge cases where this won't work
+        # 100% correctly, in particular for cells with padding and/or wrapped
+        # content. This will cover the most common scenarios, though.
+        first_visible_row_index = @y_offset
+        borders_height = (StyleTable.btoi(@border_top) +
+                          StyleTable.btoi(@border_bottom) +
+                          StyleTable.btoi(has_headers && @border_header) +
+                          StyleTable.bton(has_headers, x_padding_for_cell(0, 0)) +
+                          (StyleTable.btoi(@border_row) * (@all_rows.size - StyleTable.btoi(has_headers) - 1)))
+        if first_visible_row_index > 0 && @all_rows.size + borders_height - first_visible_row_index < @table_height
+          first_visible_row_index = @all_rows.size - @table_height + borders_height
+        end
+
+        printed_rows = StyleTable.btoi(@border_top) + 1 + StyleTable.btoi(has_headers && @border_header) + StyleTable.bton(has_headers, x_padding_for_cell(0, 0))
+
+        @all_rows.each_with_index do |_, i|
+          # Skip non-visible rows if yOffset is set.
+          if i <= first_visible_row_index
+            next
+          end
+
+          is_header = has_headers && i == 0
+          is_last_row = i == @all_rows.size - 1
+
+          row_height = @row_heights[i] + x_padding_for_cell(i, 0)
+          next_row_padding = x_padding_for_cell(i + 1, 0)
+
+          sum = (printed_rows +
+                 row_height +
+                 StyleTable.btoi(is_header && @border_header) +
+                 StyleTable.btoi(@border_bottom) +
+                 StyleTable.btoi(!is_header && !is_last_row) +
+                 StyleTable.btoi(!is_last_row && @border_row) +
+                 next_row_padding)
+
+          if sum > @table_height
+            return {first_visible_row_index, i - StyleTable.btoi(has_headers)}
+          end
+
+          printed_rows += row_height + StyleTable.btoi(is_header && @border_header) + StyleTable.btoi(!is_header && @border_row)
+        end
+
+        {first_visible_row_index, -2}
+      end
+
       def x_padding_for_col(idx : Int32) : Int32
         col = @columns[idx]?
         col ? col.x_padding : 0
@@ -353,8 +413,105 @@ module Lipgloss
       property? border_column : Bool = true
       property? border_row : Bool = false
 
+      # Fluent setters
+      def border_header(v : Bool) : self
+        @border_header = v
+        self
+      end
+
+      def border_column(v : Bool) : self
+        @border_column = v
+        self
+      end
+
+      def border_row(v : Bool) : self
+        @border_row = v
+        self
+      end
+
+      def border_top(v : Bool) : self
+        @border_top = v
+        self
+      end
+
+      def border_bottom(v : Bool) : self
+        @border_bottom = v
+        self
+      end
+
+      def border_left(v : Bool) : self
+        @border_left = v
+        self
+      end
+
+      def border_right(v : Bool) : self
+        @border_right = v
+        self
+      end
+
+      # Getters matching Go API
+      def get_border_top : Bool
+        @border_top
+      end
+
+      def get_border_bottom : Bool
+        @border_bottom
+      end
+
+      def get_border_left : Bool
+        @border_left
+      end
+
+      def get_border_right : Bool
+        @border_right
+      end
+
+      def get_border_header : Bool
+        @border_header
+      end
+
+      def get_border_column : Bool
+        @border_column
+      end
+
+      def get_border_row : Bool
+        @border_row
+      end
+
       property headers : Array(String) = [] of String
       property data : Data = StringData.new
+
+      def get_data : Data
+        @data
+      end
+
+      def get_headers : Array(String)
+        @headers
+      end
+
+      def get_height : Int32
+        @height
+      end
+
+      def get_y_offset : Int32
+        @offset
+      end
+
+      def first_visible_row_index : Int32
+        @first_visible_row_index
+      end
+
+      def last_visible_row_index : Int32
+        @last_visible_row_index
+      end
+
+      def visible_rows : Int32
+        if @last_visible_row_index == -2
+          @data.rows - @first_visible_row_index
+        else
+          @last_visible_row_index - @first_visible_row_index + 1
+        end
+      end
 
       property width : Int32 = 0
       property height : Int32 = 0
@@ -366,6 +523,8 @@ module Lipgloss
 
       getter widths : Array(Int32) = [] of Int32
       getter heights : Array(Int32) = [] of Int32
+      getter first_visible_row_index : Int32 = 0
+      getter last_visible_row_index : Int32 = -2
 
       def initialize
       end
@@ -538,6 +697,14 @@ module Lipgloss
         resizer.wrap = @wrap
         resizer.border_column = @border_column
         resizer.y_paddings = Array.new(resizer.all_rows.size) { [] of Int32 }
+        resizer.y_offset = @offset
+        resizer.use_manual_height = @use_manual_height
+        resizer.border_top = @border_top
+        resizer.border_bottom = @border_bottom
+        resizer.border_left = @border_left
+        resizer.border_right = @border_right
+        resizer.border_header = @border_header
+        resizer.border_row = @border_row
 
         all_rows = !@headers.empty? ? [@headers] + rows_matrix : rows_matrix
         style_fn = @style_func || ->(_r : Int32, _c : Int32) { Style.new }
@@ -572,6 +739,7 @@ module Lipgloss
 
         resizer.table_width = @width <= 0 ? resizer.detect_table_width : @width
         @widths, @heights = resizer.optimized_widths
+        @first_visible_row_index, @last_visible_row_index = resizer.visible_row_indexes
       end
 
       private def construct_top_border : String
@@ -752,6 +920,14 @@ module Lipgloss
 
     def self.btoi(v : Bool) : Int32
       v ? 1 : 0
+    end
+
+    def self.bton(b : Bool, n : Int32) : Int32
+      b ? n : 0
+    end
+
+    def self.default_styles(row : Int32, col : Int32) : Style
+      Style.new
     end
 
     def self.sum(values : Array(Int32)) : Int32

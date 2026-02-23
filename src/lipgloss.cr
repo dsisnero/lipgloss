@@ -22,6 +22,20 @@ require "./lipgloss/list"
 module Lipgloss
   VERSION = "2.0.0-exp"
 
+  # Non-breaking space rune.
+  NBSP = '\u00A0'
+
+  # Underline style constants (re-exported from Ansi::Style)
+  UnderlineNone   = Ansi::Style::UnderlineNone
+  UnderlineSingle = Ansi::Style::UnderlineSingle
+  UnderlineDouble = Ansi::Style::UnderlineDouble
+  UnderlineCurly  = Ansi::Style::UnderlineCurly
+  UnderlineDotted = Ansi::Style::UnderlineDotted
+  UnderlineDashed = Ansi::Style::UnderlineDashed
+
+  # Underline style type alias
+  alias Underline = Ansi::Style::Underline
+
   struct RGBAColor
     getter r : UInt8
     getter g : UInt8

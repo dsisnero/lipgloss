@@ -5,6 +5,7 @@ require "./color_profile"
 require "./view"
 require "uniwidth"
 require "cellwrap"
+require "ansi"
 
 module Lipgloss
   # Global setting for adaptive colors
@@ -631,13 +632,8 @@ module Lipgloss
   struct NoColor
   end
 
-  enum UnderlineStyle
-    None
-    Double
-    Curly
-    Dotted
-    Dashed
-  end
+  # Underline style type (alias to Ansi::Style::Underline)
+  alias UnderlineStyle = Ansi::Style::Underline
 
   # Style is the core styling primitive - a complete Lipgloss port
   struct Style

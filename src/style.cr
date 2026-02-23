@@ -1423,6 +1423,51 @@ module Lipgloss
       @border_style
     end
 
+    def underline_style : UnderlineStyle
+      @underline_style
+    end
+
+    # Border color getters
+    def border_top_foreground_color : Color?
+      resolve_color(@border_top_fg_color)
+    end
+
+    def border_right_foreground_color : Color?
+      resolve_color(@border_right_fg_color)
+    end
+
+    def border_bottom_foreground_color : Color?
+      resolve_color(@border_bottom_fg_color)
+    end
+
+    def border_left_foreground_color : Color?
+      resolve_color(@border_left_fg_color)
+    end
+
+    def border_top_background_color : Color?
+      resolve_color(@border_top_bg_color)
+    end
+
+    def border_right_background_color : Color?
+      resolve_color(@border_right_bg_color)
+    end
+
+    def border_bottom_background_color : Color?
+      resolve_color(@border_bottom_bg_color)
+    end
+
+    def border_left_background_color : Color?
+      resolve_color(@border_left_bg_color)
+    end
+
+    def margin_background_color : Color?
+      resolve_color(@margin_bg_color)
+    end
+
+    def hyperlink : Tuple(String?, String)
+      {@hyperlink_url, @hyperlink_params}
+    end
+
     def border_top? : Bool
       set?(Props::BorderTop) ? get_bool(Props::BorderTop) : implicit_borders?
     end
@@ -1685,6 +1730,26 @@ module Lipgloss
       unset(Props::BorderLeftForeground)
     end
 
+    def unset_border_top_foreground : Style
+      @border_top_fg_color = nil
+      unset(Props::BorderTopForeground)
+    end
+
+    def unset_border_right_foreground : Style
+      @border_right_fg_color = nil
+      unset(Props::BorderRightForeground)
+    end
+
+    def unset_border_bottom_foreground : Style
+      @border_bottom_fg_color = nil
+      unset(Props::BorderBottomForeground)
+    end
+
+    def unset_border_left_foreground : Style
+      @border_left_fg_color = nil
+      unset(Props::BorderLeftForeground)
+    end
+
     def unset_border_background : Style
       @border_top_bg_color = nil
       @border_right_bg_color = nil
@@ -1693,6 +1758,26 @@ module Lipgloss
       unset(Props::BorderTopBackground)
       unset(Props::BorderRightBackground)
       unset(Props::BorderBottomBackground)
+      unset(Props::BorderLeftBackground)
+    end
+
+    def unset_border_top_background : Style
+      @border_top_bg_color = nil
+      unset(Props::BorderTopBackground)
+    end
+
+    def unset_border_right_background : Style
+      @border_right_bg_color = nil
+      unset(Props::BorderRightBackground)
+    end
+
+    def unset_border_bottom_background : Style
+      @border_bottom_bg_color = nil
+      unset(Props::BorderBottomBackground)
+    end
+
+    def unset_border_left_background : Style
+      @border_left_bg_color = nil
       unset(Props::BorderLeftBackground)
     end
 

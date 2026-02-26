@@ -1,10 +1,14 @@
 require "colorprofile"
 
 module Lipgloss
+  private def self.environ : Array(String)
+    ENV.map { |k, v| "#{k}=#{v}" }
+  end
+
   # Writer that can be either a plain IO or a Colorprofile::Writer
   # This allows tests to use IO::Memory while production code uses Colorprofile::Writer
   # Default writer automatically detects color profile like Go lipgloss
-  @@writer : IO | Colorprofile::Writer = Colorprofile.new_writer(STDOUT, nil)
+  @@writer : IO | Colorprofile::Writer = Colorprofile.new_writer(STDOUT, environ)
 
   def self.writer : IO | Colorprofile::Writer
     @@writer
@@ -66,21 +70,21 @@ module Lipgloss
 
   def self.fprint(io : IO, *args) : {Int32, Nil}
     value = stringify_args(args.to_a)
-    writer = Colorprofile.new_writer(io, nil)
+    writer = Colorprofile.new_writer(io, environ)
     bytes = writer.write_string(value).to_i32
     {bytes, nil}
   end
 
   def self.fprintln(io : IO, *args) : {Int32, Nil}
     value = stringify_line_args(args.to_a) + "\n"
-    writer = Colorprofile.new_writer(io, nil)
+    writer = Colorprofile.new_writer(io, environ)
     bytes = writer.write_string(value).to_i32
     {bytes, nil}
   end
 
   def self.fprintf(io : IO, format : String, *args) : {Int32, Nil}
     value = format % args.to_a
-    writer = Colorprofile.new_writer(io, nil)
+    writer = Colorprofile.new_writer(io, environ)
     bytes = writer.write_string(value).to_i32
     {bytes, nil}
   end

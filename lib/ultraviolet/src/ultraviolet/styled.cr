@@ -1,7 +1,6 @@
 require "textseg"
 require "uniwidth"
 require "./ansi_color"
-require "ansi"
 
 module Ultraviolet
   class StyledString
@@ -28,7 +27,61 @@ module Ultraviolet
       end
 
       str = @text.gsub("\r\n", "\n")
-      Ultraviolet.print_string(buf, area.min.x, area.min.y, area, str, !@wrap, @tail)
+      Ultraviolet.print_string(buf, buf.width_method, area.min.x, area.min.y, area, str, !@wrap, @tail)
+    end
+
+    def lines(method : WidthMethod = DEFAULT_WIDTH_METHOD) : Array(Line)
+      rows = [] of Array(Cell)
+      rows << [] of Cell
+
+      x = 0
+      y = 0
+      style = Style.new
+      link = Link.new
+      str = @text.gsub("\r\n", "\n")
+
+      i = 0
+      while i < str.bytesize
+        byte = str.byte_at(i)
+        if byte == 0x1b
+          next_index, style, link = Ultraviolet.handle_escape(str, i, style, link)
+          i = next_index
+          next
+        end
+
+        if byte == '\n'.ord
+          y += 1
+          x = 0
+          ensure_row(rows, y)
+          i += 1
+          next
+        end
+
+        if byte == '\r'.ord
+          x = 0
+          i += 1
+          next
+        end
+
+        segment, i = Ultraviolet.read_print_segment(str, i)
+        TextSegment.each_grapheme(segment) do |cluster|
+          grapheme = cluster.str
+          width = method.call(grapheme)
+          width = UnicodeCharWidth.width(grapheme) if width < 0
+          place_line_cell(rows[y], x, Cell.new(grapheme, width, style, link))
+          x += width
+        end
+      end
+
+      rows.map do |row|
+        line = Line.new(row.size)
+        idx = 0
+        while idx < row.size
+          line.cells[idx] = row[idx]
+          idx += 1
+        end
+        line
+      end
     end
 
     def height : Int32
@@ -36,26 +89,51 @@ module Ultraviolet
     end
 
     def unicode_width : Int32
-      width_height.first
+      width_height(DEFAULT_WIDTH_METHOD).first
     end
 
     def wc_width : Int32
-      width_height.first
+      width_height(DEFAULT_WIDTH_METHOD).first
     end
 
     def bounds : Rectangle
-      width, height = width_height
+      width, height = width_height(DEFAULT_WIDTH_METHOD)
       Ultraviolet.rect(0, 0, width, height)
     end
 
-    private def width_height : {Int32, Int32}
+    private def width_height(method : WidthMethod) : {Int32, Int32}
       lines = Ultraviolet.strip_ansi(@text).split('\n', remove_empty: false)
       height = lines.size
       width = 0
       lines.each do |line|
-        width = {width, UnicodeCharWidth.width(line)}.max
+        width = {width, method.call(line)}.max
       end
       {width, height}
+    end
+
+    private def ensure_row(rows : Array(Array(Cell)), y : Int32) : Nil
+      while rows.size <= y
+        rows << [] of Cell
+      end
+    end
+
+    private def place_line_cell(row : Array(Cell), x : Int32, cell : Cell) : Nil
+      while row.size <= x
+        row << EMPTY_CELL
+      end
+      row[x] = cell.clone
+
+      if cell.width > 1
+        i = 1
+        while i < cell.width
+          idx = x + i
+          while row.size <= idx
+            row << EMPTY_CELL
+          end
+          row[idx] = Cell.new
+          i += 1
+        end
+      end
     end
   end
 
@@ -107,6 +185,7 @@ module Ultraviolet
 
   def self.print_string(
     screen : Screen,
+    method : WidthMethod,
     start_x : Int32,
     start_y : Int32,
     bounds : Rectangle,
@@ -119,7 +198,7 @@ module Ultraviolet
     style = Style.new
     link = Link.new
 
-    tail_cell, tail_width = build_tail_cell(truncate, tail, style, link)
+    tail_cell, tail_width = build_tail_cell(method, truncate, tail, style, link)
 
     i = 0
     while i < value.bytesize
@@ -144,21 +223,21 @@ module Ultraviolet
       end
 
       segment, i = read_print_segment(value, i)
-      x, y, done = render_segment(screen, bounds, segment, x, y, style, link, truncate, tail_cell, tail_width)
+      x, y, done = render_segment(screen, method, bounds, segment, x, y, style, link, truncate, tail_cell, tail_width)
       return if done
     end
   end
 
-  private def self.build_tail_cell(truncate : Bool, tail : String, style : Style, link : Link) : {Cell, Int32}
+  private def self.build_tail_cell(method : WidthMethod, truncate : Bool, tail : String, style : Style, link : Link) : {Cell, Int32}
     if truncate && !tail.empty?
-      width = UnicodeCharWidth.width(tail)
+      width = method.call(tail)
       return {Cell.new(tail, width, style, link), width}
     end
 
     {Cell.new, 0}
   end
 
-  private def self.read_print_segment(value : String, index : Int32) : {String, Int32}
+  def self.read_print_segment(value : String, index : Int32) : {String, Int32}
     segment_start = index
     i = index
     while i < value.bytesize
@@ -171,6 +250,7 @@ module Ultraviolet
 
   private def self.render_segment(
     screen : Screen,
+    method : WidthMethod,
     bounds : Rectangle,
     segment : String,
     x : Int32,
@@ -185,7 +265,7 @@ module Ultraviolet
 
     TextSegment.each_grapheme(segment) do |cluster|
       grapheme = cluster.str
-      width = UnicodeCharWidth.width(grapheme)
+      width = method.call(grapheme)
 
       if !truncate && x + width > bounds.max.x && y + 1 < bounds.max.y
         x = bounds.min.x
@@ -212,7 +292,7 @@ module Ultraviolet
     {x, y, done}
   end
 
-  private def self.handle_escape(
+  def self.handle_escape(
     value : String,
     index : Int32,
     style : Style,
@@ -253,12 +333,12 @@ module Ultraviolet
     while i < value.bytesize
       byte = value.byte_at(i)
       if byte == 0x07
-        data = value[start_index, i - start_index]
-        return {i + 1, read_link(data, link)}
+        data = value.byte_slice(start_index, i - start_index)
+        return {i + 1, read_link_string(data, link)}
       end
       if byte == 0x1b && i + 1 < value.bytesize && value.byte_at(i + 1) == '\\'.ord
-        data = value[start_index, i - start_index]
-        return {i + 2, read_link(data, link)}
+        data = value.byte_slice(start_index, i - start_index)
+        return {i + 2, read_link_string(data, link)}
       end
       i += 1
     end
@@ -268,7 +348,7 @@ module Ultraviolet
   def self.read_style(params : String, pen : Style) : Style
     style = pen
     if params.empty?
-      reset_style(style)
+      style = reset_style(style)
       return style
     end
 
@@ -280,6 +360,16 @@ module Ultraviolet
       i += consumed + 1
     end
     style
+  end
+
+  # Go parity alias: params already split from a CSI sequence payload.
+  def self.read_style_from_params(params : String, pen : Style) : Style
+    read_style(params, pen)
+  end
+
+  # Convenience overload for parser outputs that surface bytes.
+  def self.read_style_from_params(params : Bytes, pen : Style) : Style
+    read_style(String.new(params), pen)
   end
 
   private STYLE_SET_ATTR = {
@@ -532,50 +622,23 @@ module Ultraviolet
     end
   end
 
-  def self.read_link(data : String, link : Link) : Link
+  private def self.read_link_string(data : String, link : Link) : Link
     parts = data.split(';', remove_empty: false)
     return link unless parts.size == 3
 
     params = parts[1]
     url = parts[2]
-    if url.empty?
-      Link.new
-    else
-      Link.new(url, params)
-    end
+    Link.new(url, params)
   end
 
-  # Reads style from ANSI CSI parameters (SGR command 'm').
-  def self.read_style_from_params(params : ::Ansi::Params, pen : Style) : Style
-    # Convert params to string representation with semicolons and colons
-    tokens = [] of String
-    i = 0
-    while i < params.size
-      value, more, ok = params.param(i, 0)
-      break unless ok
-      if more
-        # Collect subparameters separated by colons
-        subparams = [] of String
-        subparams << value.to_s
-        i += 1
-        while i < params.size && more
-          subvalue, more, ok = params.param(i, 0)
-          break unless ok
-          subparams << subvalue.to_s
-          i += 1
-        end
-        tokens << subparams.join(":")
-      else
-        tokens << value.to_s
-        i += 1
-      end
-    end
-    param_str = tokens.join(";")
-    read_style(param_str, pen)
+  def self.read_link(data : Bytes, link : Link) : Link
+    # Convert bytes to string (ASCII safe)
+    str = String.new(data)
+    read_link_string(str, link)
   end
 
-  # Reads link from OSC 8 data bytes.
+  # Go parity alias: raw OSC payload bytes (`8;params;url`).
   def self.read_link_from_data(data : Bytes, link : Link) : Link
-    read_link(String.new(data), link)
+    read_link(data, link)
   end
 end

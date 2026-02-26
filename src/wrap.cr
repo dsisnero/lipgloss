@@ -21,7 +21,7 @@ module Lipgloss
       @parser = parser
       handle_csi = ->(cmd : Ansi::Cmd, params : Ansi::Params) do
         if cmd == 'm'.ord
-          @style = Ultraviolet.read_style_from_params(params, @style)
+          @style = Ultraviolet.read_style_from_params(params_to_style_string(params), @style)
         end
       end
       handle_osc = ->(cmd : Int32, data : Bytes) do
@@ -92,6 +92,32 @@ module Lipgloss
         Ansi.put_parser(parser)
         @parser = nil
       end
+    end
+
+    private def params_to_style_string(params : Ansi::Params) : String
+      tokens = [] of String
+      i = 0
+      while i < params.size
+        value, more, ok = params.param(i, 0)
+        break unless ok
+
+        if more
+          subparams = [] of String
+          subparams << value.to_s
+          i += 1
+          while i < params.size && more
+            subvalue, more, ok = params.param(i, 0)
+            break unless ok
+            subparams << subvalue.to_s
+            i += 1
+          end
+          tokens << subparams.join(":")
+        else
+          tokens << value.to_s
+          i += 1
+        end
+      end
+      tokens.join(";")
     end
   end
 

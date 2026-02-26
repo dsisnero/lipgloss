@@ -6,15 +6,15 @@ lipgloss ecosystem.
 
 ## Installation
 
-1.  Add the dependency to your `shard.yml`:
+1. Add the dependency to your `shard.yml`:
 
-   ```yaml
-   dependencies:
+    ```yaml
+    dependencies:
      lipgloss:
        github: dsisnero/lipgloss
-   ```
+    ```
 
-2.  Run `shards install`
+2. Run `shards install`
 
 ## Usage
 
@@ -48,12 +48,12 @@ CRYSTAL_PATH="$(crystal env CRYSTAL_PATH):../../lib" \
 
 ## Contributing
 
-1.  Fork it (<https://github.com/dsisnero/lipgloss/fork>)
-2.  Create your feature branch (`git checkout -b my-new-feature`)
-3.  Commit your changes (`git commit -am 'Add some feature'`)
-4.  Push to the branch (`git push origin my-new-feature`)
-5.  Create a new Pull Request
+1. Fork it (<https://github.com/dsisnero/lipgloss/fork>)
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create a new Pull Request
 
 ## Contributors
 
-*   [Dominic Sisneros](https://github.com/dsisnero) - creator and maintainer
+* [Dominic Sisneros](https://github.com/dsisnero) - creator and maintainer

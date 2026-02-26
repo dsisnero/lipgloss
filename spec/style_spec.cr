@@ -203,6 +203,24 @@ describe "Lipgloss parity: style rendering" do
     transformed.render("The quick brown 狐 jumped over the lazy 犬").should eq("\e[1m犬 yzal eht revo depmuj 狐 nworb kciuq ehT\e[0m")
   end
 
+  it "supports set_string and stringer-style rendering parity" do
+    style = Lipgloss::Style.new.bold(true).set_string("bar", "baz")
+    style.value.should eq("bar baz")
+    style.to_s.should eq("\e[1mbar baz\e[0m")
+  end
+
+  it "supports Crystal setter parity for dimensions" do
+    style = Lipgloss::Style.new
+    style.height = 10
+    style.width = 20
+
+    style.get_height.should eq(10)
+    style.get_width.should eq(20)
+    style = style.set_height(30).set_width(40)
+    style.height.should eq(30)
+    style.width.should eq(40)
+  end
+
   it "converts tabs according to tab width" do
     Lipgloss::Style.new.render("[\t]").should eq("[    ]")
     Lipgloss::Style.new.tab_width(2).render("[\t]").should eq("[  ]")

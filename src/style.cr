@@ -138,16 +138,40 @@ module Lipgloss
       get_border_edge_width(@top_left, @top, @top_right)
     end
 
+    # Go parity wrapper for Border.GetTopSize.
+    # ameba:disable Naming/AccessorMethodName
+    def get_top_size : Int32
+      top_size
+    end
+
     def bottom_size : Int32
       get_border_edge_width(@bottom_left, @bottom, @bottom_right)
+    end
+
+    # Go parity wrapper for Border.GetBottomSize.
+    # ameba:disable Naming/AccessorMethodName
+    def get_bottom_size : Int32
+      bottom_size
     end
 
     def left_size : Int32
       get_border_edge_width(@top_left, @left, @bottom_left)
     end
 
+    # Go parity wrapper for Border.GetLeftSize.
+    # ameba:disable Naming/AccessorMethodName
+    def get_left_size : Int32
+      left_size
+    end
+
     def right_size : Int32
       get_border_edge_width(@top_right, @right, @bottom_right)
+    end
+
+    # Go parity wrapper for Border.GetRightSize.
+    # ameba:disable Naming/AccessorMethodName
+    def get_right_size : Int32
+      right_size
     end
   end
 
@@ -881,9 +905,31 @@ module Lipgloss
       self
     end
 
+    def width=(w : Int32) : Int32
+      width(w)
+      @width
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def set_width(w : Int32) : Style
+      self.width = w
+      self
+    end
+
     def height(h : Int32) : Style
       @height = Math.max(0, h)
       @props |= Props::Height
+      self
+    end
+
+    def height=(h : Int32) : Int32
+      height(h)
+      @height
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def set_height(h : Int32) : Style
+      self.height = h
       self
     end
 
@@ -1228,6 +1274,12 @@ module Lipgloss
     def string=(str : String) : Style
       @value = str
       self
+    end
+
+    # Go parity helper for SetString.
+    # ameba:disable Naming/AccessorMethodName
+    def set_string(*strs : String) : Style
+      self.string = strs.join(" ")
     end
 
     # ========== GETTERS ==========
@@ -1602,6 +1654,342 @@ module Lipgloss
       {horizontal_frame_size, vertical_frame_size}
     end
 
+    # Go parity accessors from get.go.
+    # ameba:disable Naming/AccessorMethodName
+    def get_bold : Bool
+      bold?
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_italic : Bool
+      italic?
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_underline : Bool
+      underline?
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_underline_style : UnderlineStyle
+      underline_style
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_underline_color : Color | NoColor
+      underline_color || NoColor.new
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_strikethrough : Bool
+      strikethrough?
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_reverse : Bool
+      reverse?
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_blink : Bool
+      blink?
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_faint : Bool
+      faint?
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_foreground : Color | NoColor
+      foreground_color || NoColor.new
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_background : Color | NoColor
+      background_color || NoColor.new
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_width : Int32
+      width
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_height : Int32
+      height
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_align : Position
+      align_horizontal
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_align_horizontal : Position
+      align_horizontal
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_align_vertical : Position
+      align_vertical
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_padding : Tuple(Int32, Int32, Int32, Int32)
+      padding
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_padding_top : Int32
+      padding_top
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_padding_right : Int32
+      padding_right
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_padding_bottom : Int32
+      padding_bottom
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_padding_left : Int32
+      padding_left
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_padding_char : Char
+      padding_char
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_horizontal_padding : Int32
+      horizontal_padding
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_vertical_padding : Int32
+      vertical_padding
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_color_whitespace : Bool
+      color_whitespace?
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_margin : Tuple(Int32, Int32, Int32, Int32)
+      margin
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_margin_top : Int32
+      margin_top
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_margin_right : Int32
+      margin_right
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_margin_bottom : Int32
+      margin_bottom
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_margin_left : Int32
+      margin_left
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_margin_char : Char
+      margin_char
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_horizontal_margins : Int32
+      horizontal_margins
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_vertical_margins : Int32
+      vertical_margins
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border : Tuple(Border, Bool, Bool, Bool, Bool)
+      {border_style, border_top?, border_right?, border_bottom?, border_left?}
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_style : Border
+      border_style
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_top : Bool
+      border_top?
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_right : Bool
+      border_right?
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_bottom : Bool
+      border_bottom?
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_left : Bool
+      border_left?
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_top_foreground : Color | NoColor
+      border_top_foreground_color || NoColor.new
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_right_foreground : Color | NoColor
+      border_right_foreground_color || NoColor.new
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_bottom_foreground : Color | NoColor
+      border_bottom_foreground_color || NoColor.new
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_left_foreground : Color | NoColor
+      border_left_foreground_color || NoColor.new
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_foreground_blend : Array(Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor)?
+      border_foreground_blend
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_foreground_blend_offset : Int32
+      border_foreground_blend_offset
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_top_background : Color | NoColor
+      border_top_background_color || NoColor.new
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_right_background : Color | NoColor
+      border_right_background_color || NoColor.new
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_bottom_background : Color | NoColor
+      border_bottom_background_color || NoColor.new
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_left_background : Color | NoColor
+      border_left_background_color || NoColor.new
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_top_width : Int32
+      border_top_size
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_top_size : Int32
+      border_top_size
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_left_size : Int32
+      border_left_size
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_bottom_size : Int32
+      border_bottom_size
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_border_right_size : Int32
+      border_right_size
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_horizontal_border_size : Int32
+      horizontal_border_size
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_vertical_border_size : Int32
+      vertical_border_size
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_inline : Bool
+      inline?
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_max_width : Int32
+      max_width
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_max_height : Int32
+      max_height
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_tab_width : Int32
+      tab_width
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_underline_spaces : Bool
+      underline_spaces?
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_strikethrough_spaces : Bool
+      strikethrough_spaces?
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_horizontal_frame_size : Int32
+      horizontal_frame_size
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_vertical_frame_size : Int32
+      vertical_frame_size
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_frame_size : Tuple(Int32, Int32)
+      frame_size
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_transform : Proc(String, String)?
+      transform
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_hyperlink : Tuple(String?, String)
+      hyperlink
+    end
+
     # Value returns the raw, unformatted string value
     def value : String
       @value
@@ -1839,6 +2227,11 @@ module Lipgloss
     def unset_border_top_background : Style
       @border_top_bg_color = nil
       unset(Props::BorderTopBackground)
+    end
+
+    # Deprecated Go parity alias.
+    def unset_border_top_background_color : Style
+      unset_border_top_background
     end
 
     def unset_border_right_background : Style
@@ -2260,6 +2653,15 @@ module Lipgloss
     # Render applies the style to the given string(s)
     def render(*strs : String) : String
       render(strs.to_a)
+    end
+
+    # Stringer parity: rendering with the currently set underlying value.
+    def to_s : String
+      render
+    end
+
+    def to_s(io : IO) : Nil
+      io << to_s
     end
 
     def render(strs : Array(String)) : String

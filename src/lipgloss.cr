@@ -16,6 +16,7 @@ require "./style_table"
 require "./wrap"
 require "./writer"
 require "./query"
+require "./compat/color"
 require "./lipgloss/tree"
 require "./lipgloss/list"
 
@@ -573,19 +574,13 @@ module Lipgloss
       nil
     {% end %}
   end
-end
 
-# LightDark returns a function that selects between a light and dark color based
-# on the given boolean. If `is_dark` is true, the returned function will pick
-# the dark color; otherwise it will pick the light color.
-#
-# Example usage:
-#   has_dark_bg = Lipgloss.has_dark_background?
-#   light_dark = Lipgloss.light_dark(has_dark_bg)
-#   red, blue = Lipgloss.color("#ff0000"), Lipgloss.color("#0000ff")
-#   my_hot_color = light_dark.call(red, blue)
-def self.light_dark(is_dark : Bool) : LightDarkFunc
-  ->(light : Color | RGBAColor | Nil, dark : Color | RGBAColor | Nil) do
-    is_dark ? dark : light
+  # LightDark returns a function that selects between a light and dark color based
+  # on the given boolean. If `is_dark` is true, the returned function will pick
+  # the dark color; otherwise it will pick the light color.
+  def self.light_dark(is_dark : Bool) : LightDarkFunc
+    ->(light : Color | RGBAColor | Nil, dark : Color | RGBAColor | Nil) do
+      is_dark ? dark : light
+    end
   end
 end

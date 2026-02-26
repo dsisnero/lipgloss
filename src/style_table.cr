@@ -434,9 +434,17 @@ module Lipgloss
         self
       end
 
+      def border_top : Bool
+        @border_top
+      end
+
       def border_bottom(v : Bool) : self
         @border_bottom = v
         self
+      end
+
+      def border_bottom : Bool
+        @border_bottom
       end
 
       def border_left(v : Bool) : self
@@ -444,36 +452,63 @@ module Lipgloss
         self
       end
 
+      def border_left : Bool
+        @border_left
+      end
+
       def border_right(v : Bool) : self
         @border_right = v
         self
       end
 
+      def border_right : Bool
+        @border_right
+      end
+
+      def border_header : Bool
+        @border_header
+      end
+
+      def border_column : Bool
+        @border_column
+      end
+
+      def border_row : Bool
+        @border_row
+      end
+
       # Getters matching Go API
+      # ameba:disable Naming/AccessorMethodName
       def get_border_top : Bool
         @border_top
       end
 
+      # ameba:disable Naming/AccessorMethodName
       def get_border_bottom : Bool
         @border_bottom
       end
 
+      # ameba:disable Naming/AccessorMethodName
       def get_border_left : Bool
         @border_left
       end
 
+      # ameba:disable Naming/AccessorMethodName
       def get_border_right : Bool
         @border_right
       end
 
+      # ameba:disable Naming/AccessorMethodName
       def get_border_header : Bool
         @border_header
       end
 
+      # ameba:disable Naming/AccessorMethodName
       def get_border_column : Bool
         @border_column
       end
 
+      # ameba:disable Naming/AccessorMethodName
       def get_border_row : Bool
         @border_row
       end
@@ -481,19 +516,27 @@ module Lipgloss
       property headers : Array(String) = [] of String
       property data : Data = StringData.new
 
+      # ameba:disable Naming/AccessorMethodName
       def get_data : Data
         @data
       end
 
+      # ameba:disable Naming/AccessorMethodName
       def get_headers : Array(String)
         @headers
       end
 
+      # ameba:disable Naming/AccessorMethodName
       def get_height : Int32
         @height
       end
 
+      # ameba:disable Naming/AccessorMethodName
       def get_y_offset : Int32
+        @offset
+      end
+
+      def y_offset : Int32
         @offset
       end
 

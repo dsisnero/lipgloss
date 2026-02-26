@@ -27,6 +27,11 @@ module Lipgloss
       @content
     end
 
+    # ameba:disable Naming/AccessorMethodName
+    def get_content : String
+      content
+    end
+
     def width : Int32
       @width
     end
@@ -37,6 +42,11 @@ module Lipgloss
 
     def id : String
       @id
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_id : String
+      id
     end
 
     def id(id : String) : Layer
@@ -63,12 +73,27 @@ module Lipgloss
       @x
     end
 
+    # ameba:disable Naming/AccessorMethodName
+    def get_x : Int32
+      x
+    end
+
     def y : Int32
       @y
     end
 
+    # ameba:disable Naming/AccessorMethodName
+    def get_y : Int32
+      y
+    end
+
     def z : Int32
       @z
+    end
+
+    # ameba:disable Naming/AccessorMethodName
+    def get_z : Int32
+      z
     end
 
     def add_layers : Layer
@@ -94,6 +119,10 @@ module Lipgloss
         return found if found
       end
       nil
+    end
+
+    def layer(id : String) : Layer?
+      get_layer(id)
     end
 
     def max_z : Int32
@@ -141,6 +170,10 @@ module Lipgloss
 
     def empty? : Bool
       @layer.nil?
+    end
+
+    def empty : Bool
+      empty?
     end
   end
 
@@ -211,6 +244,10 @@ module Lipgloss
     def get_layer(id : String) : Layer?
       return if id.empty?
       @index[id]?
+    end
+
+    def layer(id : String) : Layer?
+      get_layer(id)
     end
 
     def refresh : Nil

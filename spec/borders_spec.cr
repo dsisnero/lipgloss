@@ -40,4 +40,22 @@ describe "Lipgloss parity: borders" do
       Lipgloss.get_first_rune_as_string(input).should eq(expect)
     end
   end
+
+  it "exposes get_*_size parity wrappers on borders" do
+    border = Lipgloss::Border.new(
+      top: "─",
+      right: "│",
+      bottom: "━",
+      left: "▌",
+      top_left: "┌",
+      top_right: "┐",
+      bottom_left: "└",
+      bottom_right: "┘"
+    )
+
+    border.get_top_size.should eq(border.top_size)
+    border.get_right_size.should eq(border.right_size)
+    border.get_bottom_size.should eq(border.bottom_size)
+    border.get_left_size.should eq(border.left_size)
+  end
 end

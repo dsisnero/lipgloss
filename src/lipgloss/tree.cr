@@ -10,7 +10,9 @@ module Lipgloss::Tree
     abstract def value=(value : String)
     abstract def children : Children
     abstract def hidden? : Bool
+    # ameba:disable Naming/AccessorMethodName
     abstract def set_value(value) : Nil
+    # ameba:disable Naming/AccessorMethodName
     abstract def set_hidden(hidden : Bool) : Nil
   end
 
@@ -30,10 +32,12 @@ module Lipgloss::Tree
       NodeChildren.new
     end
 
+    # ameba:disable Naming/AccessorMethodName
     def set_value(value) : Nil
       assign_value(value)
     end
 
+    # ameba:disable Naming/AccessorMethodName
     def set_hidden(hidden : Bool) : Nil
       @hidden = hidden
     end
@@ -87,10 +91,12 @@ module Lipgloss::Tree
       self
     end
 
+    # ameba:disable Naming/AccessorMethodName
     def set_hidden(hidden : Bool) : Nil
       @hidden = hidden
     end
 
+    # ameba:disable Naming/AccessorMethodName
     def set_value(value) : Nil
       root(value)
     end

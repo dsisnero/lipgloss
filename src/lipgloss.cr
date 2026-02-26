@@ -183,7 +183,8 @@ module Lipgloss
   #     Lipgloss.color("#ff34ac") # TrueColor
   #   )
   alias CompleteFunc = Proc((Color | NoColor)?, (Color | NoColor)?, (Color | NoColor)?, (Color | NoColor)?)
-  alias LightDarkFunc = Proc((Color | RGBAColor | Nil), (Color | RGBAColor | Nil), (Color | RGBAColor | Nil))
+  alias LightDarkColor = Color | RGBAColor | NoColor | Nil
+  alias LightDarkFunc = Proc(LightDarkColor, LightDarkColor, LightDarkColor)
 
   # Complete returns a function that will return the appropriate color based on
   # the given color profile.
@@ -579,7 +580,7 @@ module Lipgloss
   # on the given boolean. If `is_dark` is true, the returned function will pick
   # the dark color; otherwise it will pick the light color.
   def self.light_dark(is_dark : Bool) : LightDarkFunc
-    ->(light : Color | RGBAColor | Nil, dark : Color | RGBAColor | Nil) do
+    ->(light : LightDarkColor, dark : LightDarkColor) do
       is_dark ? dark : light
     end
   end

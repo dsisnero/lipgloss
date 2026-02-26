@@ -206,6 +206,7 @@ describe "Lipgloss parity: style rendering" do
   it "supports set_string and stringer-style rendering parity" do
     style = Lipgloss::Style.new.bold(true).set_string("bar", "baz")
     style.value.should eq("bar baz")
+    style.string.should eq("\e[1mbar baz\e[0m")
     style.to_s.should eq("\e[1mbar baz\e[0m")
   end
 

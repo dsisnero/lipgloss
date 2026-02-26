@@ -1271,6 +1271,11 @@ module Lipgloss
       self.string = strs.join(" ")
     end
 
+    # Stringer-style getter parity with Go's Style.String().
+    def string : String
+      render
+    end
+
     def string=(str : String) : Style
       @value = str
       self

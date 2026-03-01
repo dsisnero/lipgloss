@@ -1150,13 +1150,16 @@ module Lipgloss
     end
 
     def border_foreground_blend(*colors : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
-      case colors.size
+      # Convert to array first to work around compile-time bounds check issues
+      arr = colors.to_a
+      case arr.size
       when 0
         self
       when 1
-        border_foreground(colors[0])
+        border_foreground(arr[0])
       else
-        @border_blend_fg_color = colors.to_a
+        # The array needs to have the full union type for the instance variable
+        @border_blend_fg_color = arr.map { |color| color.as(Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) }
         @props |= Props::BorderForegroundBlend
         self
       end
@@ -2933,30 +2936,31 @@ module Lipgloss
     end
 
     private def which_sides_color(*colors : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : {Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil, Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil, Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil, Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil, Bool}
-      case colors.size
+      arr = colors.to_a
+      case arr.size
       when 1
-        top = colors[0]
-        bottom = colors[0]
-        left = colors[0]
-        right = colors[0]
+        top = arr[0]
+        bottom = arr[0]
+        left = arr[0]
+        right = arr[0]
         {top, right, bottom, left, true}
       when 2
-        top = colors[0]
-        bottom = colors[0]
-        left = colors[1]
-        right = colors[1]
+        top = arr[0]
+        bottom = arr[0]
+        left = arr[1]
+        right = arr[1]
         {top, right, bottom, left, true}
       when 3
-        top = colors[0]
-        left = colors[1]
-        right = colors[1]
-        bottom = colors[2]
+        top = arr[0]
+        left = arr[1]
+        right = arr[1]
+        bottom = arr[2]
         {top, right, bottom, left, true}
       when 4
-        top = colors[0]
-        right = colors[1]
-        bottom = colors[2]
-        left = colors[3]
+        top = arr[0]
+        right = arr[1]
+        bottom = arr[2]
+        left = arr[3]
         {top, right, bottom, left, true}
       else
         {nil, nil, nil, nil, false}

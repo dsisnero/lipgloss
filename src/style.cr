@@ -2796,7 +2796,7 @@ module Lipgloss
               if codes.empty?
                 io << char
               else
-                io << "\e[#{codes.join(';')}m" << char << "\e[0m"
+                io << "\e[#{codes.join(';')}m" << char << "\e[m"
               end
             end
           end
@@ -2815,7 +2815,7 @@ module Lipgloss
             if line.empty?
               line
             else
-              "\e[#{codes.join(';')}m#{line}\e[0m"
+              "\e[#{codes.join(';')}m#{line}\e[m"
             end
           end.join('\n')
         end
@@ -3224,7 +3224,7 @@ module Lipgloss
       codes.concat(fg.foreground_codes) if fg
       codes.concat(bg.background_codes) if bg
 
-      "\e[#{codes.join(';')}m#{str}\e[0m"
+      "\e[#{codes.join(';')}m#{str}\e[m"
     end
 
     private def apply_margins(str : String) : String
@@ -3261,7 +3261,7 @@ module Lipgloss
       codes = bg.background_codes
       return spaces if codes.empty?
 
-      "\e[#{codes.join(';')}m#{spaces}\e[0m"
+      "\e[#{codes.join(';')}m#{spaces}\e[m"
     end
 
     private def truncate_ansi(str : String, width : Int32) : String

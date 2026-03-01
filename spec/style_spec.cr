@@ -6,11 +6,11 @@ describe "Lipgloss parity: style rendering" do
     renderer.color_profile = Lipgloss::ColorProfile::TrueColor
     renderer.has_dark_background = true
     cases = [
-      {style: -> { Lipgloss::Style.new.renderer(renderer).underline(true) }, expected: "\e[4;4ma\e[0m\e[4;4mb\e[0m\e[4m \e[0m\e[4;4mc\e[0m"},
-      {style: -> { Lipgloss::Style.new.renderer(renderer).underline(true).underline_spaces(true) }, expected: "\e[4;4ma\e[0m\e[4;4mb\e[0m\e[4m \e[0m\e[4;4mc\e[0m"},
-      {style: -> { Lipgloss::Style.new.renderer(renderer).underline(true).underline_spaces(false) }, expected: "\e[4;4ma\e[0m\e[4;4mb\e[0m \e[4;4mc\e[0m"},
-      {style: -> { Lipgloss::Style.new.renderer(renderer).underline_spaces(true) }, expected: "ab\e[4m \e[0mc"},
-      {style: -> { Lipgloss::Style.new.renderer(renderer).underline(true).underline_style(Lipgloss::UnderlineStyle::Curly) }, expected: "\e[4;4:3ma\e[0m\e[4;4:3mb\e[0m\e[4m \e[0m\e[4;4:3mc\e[0m"},
+      {style: -> { Lipgloss::Style.new.renderer(renderer).underline(true) }, expected: "\e[4;4ma\e[m\e[4;4mb\e[m\e[4m \e[m\e[4;4mc\e[m"},
+      {style: -> { Lipgloss::Style.new.renderer(renderer).underline(true).underline_spaces(true) }, expected: "\e[4;4ma\e[m\e[4;4mb\e[m\e[4m \e[m\e[4;4mc\e[m"},
+      {style: -> { Lipgloss::Style.new.renderer(renderer).underline(true).underline_spaces(false) }, expected: "\e[4;4ma\e[m\e[4;4mb\e[m \e[4;4mc\e[m"},
+      {style: -> { Lipgloss::Style.new.renderer(renderer).underline_spaces(true) }, expected: "ab\e[4m \e[mc"},
+      {style: -> { Lipgloss::Style.new.renderer(renderer).underline(true).underline_style(Lipgloss::UnderlineStyle::Curly) }, expected: "\e[4;4:3ma\e[m\e[4;4:3mb\e[m\e[4m \e[m\e[4;4:3mc\e[m"},
     ]
 
     cases.each_with_index do |test_case, index|
@@ -25,10 +25,10 @@ describe "Lipgloss parity: style rendering" do
     renderer.color_profile = Lipgloss::ColorProfile::TrueColor
     renderer.has_dark_background = true
     cases = [
-      {style: -> { Lipgloss::Style.new.renderer(renderer).strikethrough(true) }, expected: "\e[9ma\e[0m\e[9mb\e[0m\e[9m \e[0m\e[9mc\e[0m"},
-      {style: -> { Lipgloss::Style.new.renderer(renderer).strikethrough(true).strikethrough_spaces(true) }, expected: "\e[9ma\e[0m\e[9mb\e[0m\e[9m \e[0m\e[9mc\e[0m"},
-      {style: -> { Lipgloss::Style.new.renderer(renderer).strikethrough(true).strikethrough_spaces(false) }, expected: "\e[9ma\e[0m\e[9mb\e[0m \e[9mc\e[0m"},
-      {style: -> { Lipgloss::Style.new.renderer(renderer).strikethrough_spaces(true) }, expected: "ab\e[9m \e[0mc"},
+      {style: -> { Lipgloss::Style.new.renderer(renderer).strikethrough(true) }, expected: "\e[9ma\e[m\e[9mb\e[m\e[9m \e[m\e[9mc\e[m"},
+      {style: -> { Lipgloss::Style.new.renderer(renderer).strikethrough(true).strikethrough_spaces(true) }, expected: "\e[9ma\e[m\e[9mb\e[m\e[9m \e[m\e[9mc\e[m"},
+      {style: -> { Lipgloss::Style.new.renderer(renderer).strikethrough(true).strikethrough_spaces(false) }, expected: "\e[9ma\e[m\e[9mb\e[m \e[9mc\e[m"},
+      {style: -> { Lipgloss::Style.new.renderer(renderer).strikethrough_spaces(true) }, expected: "ab\e[9m \e[mc"},
     ]
 
     cases.each_with_index do |test_case, index|
@@ -40,12 +40,12 @@ describe "Lipgloss parity: style rendering" do
 
   it "renders simple styled text variants" do
     cases = [
-      {style: Lipgloss::Style.new.foreground("#5A56E0"), expected: "\e[38;2;90;86;224mhello\e[0m"},
-      {style: Lipgloss::Style.new.bold(true), expected: "\e[1mhello\e[0m"},
-      {style: Lipgloss::Style.new.italic(true), expected: "\e[3mhello\e[0m"},
-      {style: Lipgloss::Style.new.underline(true), expected: "\e[4;4mh\e[0m\e[4;4me\e[0m\e[4;4ml\e[0m\e[4;4ml\e[0m\e[4;4mo\e[0m"},
-      {style: Lipgloss::Style.new.blink(true), expected: "\e[5mhello\e[0m"},
-      {style: Lipgloss::Style.new.faint(true), expected: "\e[2mhello\e[0m"},
+      {style: Lipgloss::Style.new.foreground("#5A56E0"), expected: "\e[38;2;90;86;224mhello\e[m"},
+      {style: Lipgloss::Style.new.bold(true), expected: "\e[1mhello\e[m"},
+      {style: Lipgloss::Style.new.italic(true), expected: "\e[3mhello\e[m"},
+      {style: Lipgloss::Style.new.underline(true), expected: "\e[4;4mh\e[m\e[4;4me\e[m\e[4;4ml\e[m\e[4;4ml\e[m\e[4;4mo\e[m"},
+      {style: Lipgloss::Style.new.blink(true), expected: "\e[5mhello\e[m"},
+      {style: Lipgloss::Style.new.faint(true), expected: "\e[2mhello\e[m"},
     ]
 
     cases.each_with_index do |test_case, case_index|
@@ -185,7 +185,7 @@ describe "Lipgloss parity: style rendering" do
 
     bold_with_string = Lipgloss::Style.new.bold(true)
     bold_with_string.string = "bar"
-    bold_with_string.render("foo").should eq("\e[1mbar foo\e[0m")
+    bold_with_string.render("foo").should eq("\e[1mbar foo\e[m")
 
     multi_string = Lipgloss::Style.new
     multi_string.string = "bar foobar"
@@ -200,14 +200,14 @@ describe "Lipgloss parity: style rendering" do
       chars.reverse.join
     }
     transformed = Lipgloss::Style.new.bold(true).transform(reverse)
-    transformed.render("The quick brown 狐 jumped over the lazy 犬").should eq("\e[1m犬 yzal eht revo depmuj 狐 nworb kciuq ehT\e[0m")
+    transformed.render("The quick brown 狐 jumped over the lazy 犬").should eq("\e[1m犬 yzal eht revo depmuj 狐 nworb kciuq ehT\e[m")
   end
 
   it "supports set_string and stringer-style rendering parity" do
     style = Lipgloss::Style.new.bold(true).set_string("bar", "baz")
     style.value.should eq("bar baz")
-    style.string.should eq("\e[1mbar baz\e[0m")
-    style.to_s.should eq("\e[1mbar baz\e[0m")
+    style.string.should eq("\e[1mbar baz\e[m")
+    style.to_s.should eq("\e[1mbar baz\e[m")
   end
 
   it "supports Crystal setter parity for dimensions" do
@@ -248,12 +248,12 @@ describe "Lipgloss parity: style rendering" do
 
     styled_link = Lipgloss::Style.new.renderer(renderer).hyperlink("https://example.com", "id=123").bold(true).foreground(Lipgloss::Color.indexed(234))
     styled_link.string = "example"
-    styled_link.render.should eq("\e]8;id=123;https://example.com\a\e[1;38;5;234mexample\e[0m\e]8;;\a")
+    styled_link.render.should eq("\e]8;id=123;https://example.com\a\e[1;38;5;234mexample\e[m\e]8;;\a")
 
     style = Lipgloss::Style.new.renderer(renderer).hyperlink("https://example.com", "id=123").bold(true).foreground(Lipgloss::Color.indexed(234))
     style.string = "example"
     style = style.unset_hyperlink
-    style.render.should eq("\e[1;38;5;234mexample\e[0m")
+    style.render.should eq("\e[1;38;5;234mexample\e[m")
   end
 
   it "renders carriage return input equivalently to normalized newlines" do

@@ -22,9 +22,9 @@ describe "Lipgloss parity: color profiles" do
 
     cases = {
       Lipgloss::ColorProfile::ASCII     => "hello",
-      Lipgloss::ColorProfile::ANSI      => "\e[94mhello\e[0m",
-      Lipgloss::ColorProfile::ANSI256   => "\e[38;5;62mhello\e[0m",
-      Lipgloss::ColorProfile::TrueColor => "\e[38;2;90;86;224mhello\e[0m",
+      Lipgloss::ColorProfile::ANSI      => "\e[94mhello\e[m",
+      Lipgloss::ColorProfile::ANSI256   => "\e[38;5;62mhello\e[m",
+      Lipgloss::ColorProfile::TrueColor => "\e[38;2;90;86;224mhello\e[m",
     }
 
     cases.each do |profile, expected|

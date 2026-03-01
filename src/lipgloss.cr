@@ -58,6 +58,11 @@ module Lipgloss
 
     def initialize(@r : UInt8, @g : UInt8, @b : UInt8, @a : UInt8 = 255_u8)
     end
+
+    # Converts RGBAColor to Color (drops alpha channel)
+    def to_color : Color
+      Color.rgb(r.to_i32, g.to_i32, b.to_i32)
+    end
   end
 
   # Gets the first UTF-8 rune from a string.
@@ -288,19 +293,37 @@ module Lipgloss
     end
   end
 
-  def self.blend1d(steps : Int32, *stops : Color | RGBAColor | Nil) : Array(RGBAColor)?
-    safe_steps = [steps, 0].max
-    compact_stops = normalize_stops(stops.to_a)
-    blend1d_from_colors(safe_steps, compact_stops)
+  def self.blend1d(steps : Int32, *stops : Color | RGBAColor | Nil) : Array(Color)?
+    blend1d(steps, stops.to_a)
   end
 
-  def self.blend1d(steps : Int32) : Array(RGBAColor)?
+  def self.blend1d(steps : Int32, stops : Array(Color | RGBAColor | Nil)) : Array(Color)?
     safe_steps = [steps, 0].max
-    return [] of RGBAColor if safe_steps == 0
+    compact_stops = normalize_stops(stops)
+    return nil if compact_stops.empty?
+
+    if safe_steps <= compact_stops.size
+      return compact_stops.first(safe_steps).map { |rgba| rgba_to_color(rgba) }
+    end
+
+    if compact_stops.size == 1
+      single = rgba_to_color(compact_stops[0])
+      return Array.new(safe_steps, single)
+    end
+
+    blended_rgba = blend1d_from_colors(safe_steps, compact_stops)
+    return nil unless blended_rgba
+
+    blended_rgba.map { |rgba| rgba_to_color(rgba) }
+  end
+
+  def self.blend1d(steps : Int32) : Array(Color)?
+    safe_steps = [steps, 0].max
+    return [] of Color if safe_steps == 0
     nil
   end
 
-  def self.blend2d(width : Int32, height : Int32, angle : Float64, *stops : Color | RGBAColor | Nil) : Array(RGBAColor)?
+  def self.blend2d(width : Int32, height : Int32, angle : Float64, *stops : Color | RGBAColor | Nil) : Array(Color)?
     safe_width = [width, 1].max
     safe_height = [height, 1].max
 
@@ -308,7 +331,7 @@ module Lipgloss
     return nil if compact_stops.empty?
 
     if compact_stops.size == 1
-      single = compact_stops[0]
+      single = rgba_to_color(compact_stops[0])
       return Array.new(safe_width * safe_height, single)
     end
 
@@ -318,7 +341,7 @@ module Lipgloss
     diagonal_gradient = blend1d_from_colors([safe_width, safe_height].max, compact_stops)
     return nil unless diagonal_gradient
 
-    result = Array(RGBAColor).new(safe_width * safe_height)
+    result = Array(Color).new(safe_width * safe_height)
     center_x = (safe_width - 1) / 2.0
     center_y = (safe_height - 1) / 2.0
     angle_radians = normalized_angle * Math::PI / 180.0
@@ -334,15 +357,15 @@ module Lipgloss
         rotated_x = dx * cos_angle - dy * sin_angle
         gradient_pos = clamp((rotated_x + diagonal_length / 2.0) / diagonal_length, 0.0, 1.0)
         gradient_index = (gradient_pos * gradient_len).to_i
-        gradient_index = [gradient_index, diagonal_gradient.size - 1].min
-        result << diagonal_gradient[gradient_index]
+        gradient_index = diagonal_gradient.size - 1 if gradient_index >= diagonal_gradient.size
+        result << rgba_to_color(diagonal_gradient[gradient_index])
       end
     end
 
     result
   end
 
-  def self.blend2d(width : Int32, height : Int32, angle : Float64) : Array(RGBAColor)?
+  def self.blend2d(width : Int32, height : Int32, angle : Float64) : Array(Color)?
     nil
   end
 
@@ -470,6 +493,10 @@ module Lipgloss
     else
       color
     end
+  end
+
+  private def self.rgba_to_color(rgba : RGBAColor) : Color
+    rgba.to_color
   end
 
   private def self.rgb_to_lab(r : Float64, g : Float64, b : Float64) : LabColor

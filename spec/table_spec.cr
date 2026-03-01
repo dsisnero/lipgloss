@@ -575,12 +575,12 @@ describe "Lipgloss parity: table renderer" do
   end
 
   it "renders ansi content correctly" do
-    code = "\e[31mC\e[0m\e[32mo\e[0m\e[34md\e[0m\e[33me\e[0m"
+    code = "\e[31mC\e[m\e[32mo\e[m\e[34md\e[m\e[33me\e[m"
     rows = [
-      {"Apple", "Red", "\e[31m31\e[0m"},
-      {"Lime", "Green", "\e[32m32\e[0m"},
-      {"Banana", "Yellow", "\e[33m33\e[0m"},
-      {"Blueberry", "Blue", "\e[34m34\e[0m"},
+      {"Apple", "Red", "\e[31m31\e[m"},
+      {"Lime", "Green", "\e[32m32\e[m"},
+      {"Banana", "Yellow", "\e[33m33\e[m"},
+      {"Blueberry", "Blue", "\e[34m34\e[m"},
     ]
 
     table = Table.new

@@ -728,7 +728,7 @@ module Lipgloss
     @value : String = ""
 
     # Boolean attributes stored as a bitfield for efficiency
-    @attrs : UInt32 = 0
+    @attrs : UInt64 = 0
 
     # Color properties
     @fg_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil = nil
@@ -866,8 +866,8 @@ module Lipgloss
       self
     end
 
-    def foreground(hex : String) : Style
-      foreground(Color.from_hex(hex))
+    def foreground(spec : String) : Style
+      foreground(Lipgloss.color(spec))
     end
 
     # Compatibility helpers for older example code.
@@ -885,8 +885,8 @@ module Lipgloss
       self
     end
 
-    def background(hex : String) : Style
-      background(Color.from_hex(hex))
+    def background(spec : String) : Style
+      background(Lipgloss.color(spec))
     end
 
     # Compatibility helpers for older example code.
@@ -2411,7 +2411,7 @@ module Lipgloss
     # ========== COPY ==========
 
     def copy : Style
-      self
+      dup
     end
 
     # Merge another style into this one
@@ -2430,7 +2430,7 @@ module Lipgloss
         if other.@props.{{ prop.id.underscore }}?
           @props = Props.new(@props.value | Props::{{ prop.id }}.value)
           # Copy the attr bit from other
-          bit_mask = 1u32 << Props::{{ prop.id }}.value.trailing_zeros_count
+          bit_mask = 1u64 << Props::{{ prop.id }}.value.trailing_zeros_count
           if (other.@attrs & bit_mask) != 0
             @attrs |= bit_mask
           else
@@ -2599,7 +2599,7 @@ module Lipgloss
 
     # Internal method to receive copied properties
     protected def copy_from(
-      props : Props, value : String, attrs : UInt32,
+      props : Props, value : String, attrs : UInt64,
       fg_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil,
       bg_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil,
       width : Int32, height : Int32, max_width : Int32, max_height : Int32,
@@ -2721,9 +2721,11 @@ module Lipgloss
       inline_val = get_bool(Props::Inline)
       max_width_val = @max_width
       max_height_val = @max_height
+      color_whitespace = set?(Props::ColorWhitespace) ? get_bool(Props::ColorWhitespace) : true
 
       underline_spaces = set?(Props::UnderlineSpaces) ? get_bool(Props::UnderlineSpaces) : underline_val
       strikethrough_spaces = set?(Props::StrikethroughSpaces) ? get_bool(Props::StrikethroughSpaces) : strikethrough_val
+      style_whitespace = reverse_val
 
       # Convert tabs
       str = maybe_convert_tabs(str)
@@ -2824,6 +2826,17 @@ module Lipgloss
         end
       end
 
+      whitespace_codes = [] of String
+      whitespace_codes << "7" if reverse_val
+      if style_whitespace && fg
+        whitespace_codes.concat(fg.foreground_codes.map(&.to_s))
+      end
+      if color_whitespace && bg
+        whitespace_codes.concat(bg.background_codes.map(&.to_s))
+      end
+      whitespace_open = whitespace_codes.empty? ? "" : "\e[#{whitespace_codes.join(';')}m"
+      whitespace_close = whitespace_codes.empty? ? "" : "\e[m"
+
       # Apply padding
       if !inline_val
         if left_padding > 0 || right_padding > 0
@@ -2831,18 +2844,24 @@ module Lipgloss
           pad_char = @padding_char.to_s
           left_str = pad_char * left_padding
           right_str = pad_char * right_padding
+          if !whitespace_open.empty?
+            left_str = "#{whitespace_open}#{left_str}#{whitespace_close}" if left_padding > 0
+            right_str = "#{whitespace_open}#{right_str}#{whitespace_close}" if right_padding > 0
+          end
           str = lines.map { |line| "#{left_str}#{line}#{right_str}" }.join('\n')
         end
 
         if top_padding > 0
           width_for_pad = str.split('\n').max_of? { |line| Text.width(line) } || 0
           empty_line = @padding_char.to_s * width_for_pad
+          empty_line = "#{whitespace_open}#{empty_line}#{whitespace_close}" unless whitespace_open.empty?
           str = (Array.new(top_padding, empty_line).join('\n')) + "\n" + str
         end
 
         if bottom_padding > 0
           width_for_pad = str.split('\n').max_of? { |line| Text.width(line) } || 0
           empty_line = @padding_char.to_s * width_for_pad
+          empty_line = "#{whitespace_open}#{empty_line}#{whitespace_close}" unless whitespace_open.empty?
           str = str + "\n" + (Array.new(bottom_padding, empty_line).join('\n'))
         end
       end
@@ -2898,15 +2917,15 @@ module Lipgloss
     private def set_bool(prop : Props, v : Bool) : Style
       @props |= prop
       if v
-        @attrs |= (1u32 << prop.value.trailing_zeros_count)
+        @attrs |= (1u64 << prop.value.trailing_zeros_count)
       else
-        @attrs &= ~(1u32 << prop.value.trailing_zeros_count)
+        @attrs &= ~(1u64 << prop.value.trailing_zeros_count)
       end
       self
     end
 
     def get_bool(prop : Props) : Bool
-      (@attrs & (1u32 << prop.value.trailing_zeros_count)) != 0
+      (@attrs & (1u64 << prop.value.trailing_zeros_count)) != 0
     end
 
     def set?(prop : Props) : Bool
@@ -2916,8 +2935,8 @@ module Lipgloss
     private def unset(prop : Props) : Style
       @props &= ~prop
       bit = prop.value.trailing_zeros_count
-      if bit < 32
-        @attrs &= ~(1u32 << bit)
+      if bit < 64
+        @attrs &= ~(1u64 << bit)
       end
       self
     end

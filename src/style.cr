@@ -6,6 +6,7 @@ require "./view"
 require "uniwidth"
 require "cellwrap"
 require "ansi"
+require "../initialize_with"
 
 module Lipgloss
   # Global setting for adaptive colors
@@ -661,6 +662,15 @@ module Lipgloss
 
   # Style is the core styling primitive - a complete Lipgloss port
   struct Style
+    include Raven::Mixin::InitializeWith
+
+    # Create a copy with modified attributes
+    def with_attrs(**attributes) : Style
+      dup = self.dup
+      dup.initialize_with(attributes)
+      dup
+    end
+
     WRAP_CACHE_MAX = 256
 
     @@wrap_cache = Hash(Tuple(String, Int32), String).new
@@ -807,9 +817,10 @@ module Lipgloss
     end
 
     def renderer(r : StyleRenderer) : Style
-      @style_renderer = r
+      # Set global state
       Lipgloss.has_dark_background = r.has_dark_background?
-      self
+      # Return copy with updated renderer
+      with_attrs(style_renderer: r)
     end
 
     # ========== SETTERS (Fluent API) ==========
@@ -861,9 +872,26 @@ module Lipgloss
 
     # Colors
     def foreground(c : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
-      @fg_color = c
-      @props |= Props::Foreground
-      self
+      # Create a copy with modified foreground color
+      result = Style.new
+      result.copy_from(
+        @props | Props::Foreground, @value, @attrs,
+        c, @bg_color, # Modified fg_color
+        @width, @height, @max_width, @max_height,
+        @align_horizontal, @align_vertical,
+        @padding_top, @padding_right, @padding_bottom, @padding_left,
+        @margin_top, @margin_right, @margin_bottom, @margin_left, @margin_bg_color,
+        @border_style,
+        @border_top_fg_color, @border_right_fg_color, @border_bottom_fg_color, @border_left_fg_color,
+        @border_blend_fg_color, @border_foreground_blend_offset,
+        @border_top_bg_color, @border_right_bg_color, @border_bottom_bg_color, @border_left_bg_color,
+        @tab_width, @transform,
+        @padding_char, @margin_char,
+        @hyperlink_url, @hyperlink_params,
+        @underline_style, @underline_color,
+        @style_renderer
+      )
+      result
     end
 
     def foreground(spec : String) : Style
@@ -880,9 +908,26 @@ module Lipgloss
     end
 
     def background(c : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
-      @bg_color = c
-      @props |= Props::Background
-      self
+      # Create a copy with modified background color
+      result = Style.new
+      result.copy_from(
+        @props | Props::Background, @value, @attrs,
+        @fg_color, c, # Modified bg_color
+        @width, @height, @max_width, @max_height,
+        @align_horizontal, @align_vertical,
+        @padding_top, @padding_right, @padding_bottom, @padding_left,
+        @margin_top, @margin_right, @margin_bottom, @margin_left, @margin_bg_color,
+        @border_style,
+        @border_top_fg_color, @border_right_fg_color, @border_bottom_fg_color, @border_left_fg_color,
+        @border_blend_fg_color, @border_foreground_blend_offset,
+        @border_top_bg_color, @border_right_bg_color, @border_bottom_bg_color, @border_left_bg_color,
+        @tab_width, @transform,
+        @padding_char, @margin_char,
+        @hyperlink_url, @hyperlink_params,
+        @underline_style, @underline_color,
+        @style_renderer
+      )
+      result
     end
 
     def background(spec : String) : Style
@@ -900,13 +945,12 @@ module Lipgloss
 
     # Dimensions
     def width(w : Int32) : Style
-      @width = Math.max(0, w)
-      @props |= Props::Width
-      self
+      with_attrs(width: Math.max(0, w), props: @props | Props::Width)
     end
 
     def width=(w : Int32) : Int32
-      width(w)
+      @width = Math.max(0, w)
+      @props |= Props::Width
       @width
     end
 
@@ -917,13 +961,12 @@ module Lipgloss
     end
 
     def height(h : Int32) : Style
-      @height = Math.max(0, h)
-      @props |= Props::Height
-      self
+      with_attrs(height: Math.max(0, h), props: @props | Props::Height)
     end
 
     def height=(h : Int32) : Int32
-      height(h)
+      @height = Math.max(0, h)
+      @props |= Props::Height
       @height
     end
 
@@ -934,42 +977,33 @@ module Lipgloss
     end
 
     def max_width(w : Int32) : Style
-      @max_width = Math.max(0, w)
-      @props |= Props::MaxWidth
-      self
+      with_attrs(max_width: Math.max(0, w), props: @props | Props::MaxWidth)
     end
 
     def max_height(h : Int32) : Style
-      @max_height = Math.max(0, h)
-      @props |= Props::MaxHeight
-      self
+      with_attrs(max_height: Math.max(0, h), props: @props | Props::MaxHeight)
     end
 
     # Alignment - single argument sets horizontal
     def align(p : Position) : Style
-      @align_horizontal = p
-      @props |= Props::AlignHorizontal
-      self
+      with_attrs(align_horizontal: p, props: @props | Props::AlignHorizontal)
     end
 
     # Alignment - two arguments set horizontal and vertical
     def align(h : Position, v : Position) : Style
-      @align_horizontal = h
-      @align_vertical = v
-      @props |= Props::AlignHorizontal | Props::AlignVertical
-      self
+      with_attrs(
+        align_horizontal: h,
+        align_vertical: v,
+        props: @props | Props::AlignHorizontal | Props::AlignVertical
+      )
     end
 
     def align_horizontal(p : Position) : Style
-      @align_horizontal = p
-      @props |= Props::AlignHorizontal
-      self
+      with_attrs(align_horizontal: p, props: @props | Props::AlignHorizontal)
     end
 
     def align_vertical(p : Position) : Style
-      @align_vertical = p
-      @props |= Props::AlignVertical
-      self
+      with_attrs(align_vertical: p, props: @props | Props::AlignVertical)
     end
 
     # Padding - CSS shorthand style
@@ -986,36 +1020,29 @@ module Lipgloss
     end
 
     def padding(top : Int32, right : Int32, bottom : Int32, left : Int32) : Style
-      @padding_top = Math.max(0, top)
-      @padding_right = Math.max(0, right)
-      @padding_bottom = Math.max(0, bottom)
-      @padding_left = Math.max(0, left)
-      @props |= Props::PaddingTop | Props::PaddingRight | Props::PaddingBottom | Props::PaddingLeft
-      self
+      with_attrs(
+        padding_top: Math.max(0, top),
+        padding_right: Math.max(0, right),
+        padding_bottom: Math.max(0, bottom),
+        padding_left: Math.max(0, left),
+        props: @props | Props::PaddingTop | Props::PaddingRight | Props::PaddingBottom | Props::PaddingLeft
+      )
     end
 
     def padding_top(i : Int32) : Style
-      @padding_top = Math.max(0, i)
-      @props |= Props::PaddingTop
-      self
+      with_attrs(padding_top: Math.max(0, i), props: @props | Props::PaddingTop)
     end
 
     def padding_right(i : Int32) : Style
-      @padding_right = Math.max(0, i)
-      @props |= Props::PaddingRight
-      self
+      with_attrs(padding_right: Math.max(0, i), props: @props | Props::PaddingRight)
     end
 
     def padding_bottom(i : Int32) : Style
-      @padding_bottom = Math.max(0, i)
-      @props |= Props::PaddingBottom
-      self
+      with_attrs(padding_bottom: Math.max(0, i), props: @props | Props::PaddingBottom)
     end
 
     def padding_left(i : Int32) : Style
-      @padding_left = Math.max(0, i)
-      @props |= Props::PaddingLeft
-      self
+      with_attrs(padding_left: Math.max(0, i), props: @props | Props::PaddingLeft)
     end
 
     # Margin - CSS shorthand style
@@ -1032,42 +1059,33 @@ module Lipgloss
     end
 
     def margin(top : Int32, right : Int32, bottom : Int32, left : Int32) : Style
-      @margin_top = Math.max(0, top)
-      @margin_right = Math.max(0, right)
-      @margin_bottom = Math.max(0, bottom)
-      @margin_left = Math.max(0, left)
-      @props |= Props::MarginTop | Props::MarginRight | Props::MarginBottom | Props::MarginLeft
-      self
+      with_attrs(
+        margin_top: Math.max(0, top),
+        margin_right: Math.max(0, right),
+        margin_bottom: Math.max(0, bottom),
+        margin_left: Math.max(0, left),
+        props: @props | Props::MarginTop | Props::MarginRight | Props::MarginBottom | Props::MarginLeft
+      )
     end
 
     def margin_top(i : Int32) : Style
-      @margin_top = Math.max(0, i)
-      @props |= Props::MarginTop
-      self
+      with_attrs(margin_top: Math.max(0, i), props: @props | Props::MarginTop)
     end
 
     def margin_right(i : Int32) : Style
-      @margin_right = Math.max(0, i)
-      @props |= Props::MarginRight
-      self
+      with_attrs(margin_right: Math.max(0, i), props: @props | Props::MarginRight)
     end
 
     def margin_bottom(i : Int32) : Style
-      @margin_bottom = Math.max(0, i)
-      @props |= Props::MarginBottom
-      self
+      with_attrs(margin_bottom: Math.max(0, i), props: @props | Props::MarginBottom)
     end
 
     def margin_left(i : Int32) : Style
-      @margin_left = Math.max(0, i)
-      @props |= Props::MarginLeft
-      self
+      with_attrs(margin_left: Math.max(0, i), props: @props | Props::MarginLeft)
     end
 
     def margin_background(c : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
-      @margin_bg_color = c
-      @props |= Props::MarginBackground
-      self
+      with_attrs(margin_bg_color: c, props: @props | Props::MarginBackground)
     end
 
     # Border
@@ -1077,23 +1095,58 @@ module Lipgloss
     end
 
     def border(b : Border, *sides : Bool) : Style
-      @border_style = b
-      @props |= Props::BorderStyle
+      # Create a copy with modified border style
+      result = Style.new
+      result.copy_from(
+        @props | Props::BorderStyle, @value, @attrs,
+        @fg_color, @bg_color,
+        @width, @height, @max_width, @max_height,
+        @align_horizontal, @align_vertical,
+        @padding_top, @padding_right, @padding_bottom, @padding_left,
+        @margin_top, @margin_right, @margin_bottom, @margin_left, @margin_bg_color,
+        b, # Modified border_style
+        @border_top_fg_color, @border_right_fg_color, @border_bottom_fg_color, @border_left_fg_color,
+        @border_blend_fg_color, @border_foreground_blend_offset,
+        @border_top_bg_color, @border_right_bg_color, @border_bottom_bg_color, @border_left_bg_color,
+        @tab_width, @transform,
+        @padding_char, @margin_char,
+        @hyperlink_url, @hyperlink_params,
+        @underline_style, @underline_color,
+        @style_renderer
+      )
 
       # Parse sides argument similar to CSS
       top, right, bottom, left = parse_sides_bool(sides.to_a)
 
-      border_top(top)
-      border_right(right)
-      border_bottom(bottom)
-      border_left(left)
-      self
+      # Apply border sides to the copy
+      result = result.border_top(top)
+      result = result.border_right(right)
+      result = result.border_bottom(bottom)
+      result = result.border_left(left)
+      result
     end
 
     def border_style(b : Border) : Style
-      @border_style = b
-      @props |= Props::BorderStyle
-      self
+      # Create a copy with modified border style
+      result = Style.new
+      result.copy_from(
+        @props | Props::BorderStyle, @value, @attrs,
+        @fg_color, @bg_color,
+        @width, @height, @max_width, @max_height,
+        @align_horizontal, @align_vertical,
+        @padding_top, @padding_right, @padding_bottom, @padding_left,
+        @margin_top, @margin_right, @margin_bottom, @margin_left, @margin_bg_color,
+        b, # Modified border_style
+        @border_top_fg_color, @border_right_fg_color, @border_bottom_fg_color, @border_left_fg_color,
+        @border_blend_fg_color, @border_foreground_blend_offset,
+        @border_top_bg_color, @border_right_bg_color, @border_bottom_bg_color, @border_left_bg_color,
+        @tab_width, @transform,
+        @padding_char, @margin_char,
+        @hyperlink_url, @hyperlink_params,
+        @underline_style, @underline_color,
+        @style_renderer
+      )
+      result
     end
 
     def border_top(v : Bool = true) : Style
@@ -1116,37 +1169,30 @@ module Lipgloss
       return self if colors.empty?
       top, right, bottom, left, ok = which_sides_color(*colors)
       return self unless ok
-      @border_top_fg_color = top
-      @border_right_fg_color = right
-      @border_bottom_fg_color = bottom
-      @border_left_fg_color = left
-      @props |= Props::BorderTopForeground | Props::BorderRightForeground |
-                Props::BorderBottomForeground | Props::BorderLeftForeground
-      self
+      with_attrs(
+        border_top_fg_color: top,
+        border_right_fg_color: right,
+        border_bottom_fg_color: bottom,
+        border_left_fg_color: left,
+        props: @props | Props::BorderTopForeground | Props::BorderRightForeground |
+               Props::BorderBottomForeground | Props::BorderLeftForeground
+      )
     end
 
     def border_top_foreground(c : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
-      @border_top_fg_color = c
-      @props |= Props::BorderTopForeground
-      self
+      with_attrs(border_top_fg_color: c, props: @props | Props::BorderTopForeground)
     end
 
     def border_right_foreground(c : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
-      @border_right_fg_color = c
-      @props |= Props::BorderRightForeground
-      self
+      with_attrs(border_right_fg_color: c, props: @props | Props::BorderRightForeground)
     end
 
     def border_bottom_foreground(c : Color | AdaptiveColor | CompleteAdaptiveColor | CompleteColor | NoColor) : Style
-      @border_bottom_fg_color = c
-      @props |= Props::BorderBottomForeground
-      self
+      with_attrs(border_bottom_fg_color: c, props: @props | Props::BorderBottomForeground)
     end
 
     def border_left_foreground(c : Color | AdaptiveColor | CompleteAdaptiveColor | CompleteColor | NoColor) : Style
-      @border_left_fg_color = c
-      @props |= Props::BorderLeftForeground
-      self
+      with_attrs(border_left_fg_color: c, props: @props | Props::BorderLeftForeground)
     end
 
     def border_foreground_blend(*colors : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
@@ -1159,16 +1205,13 @@ module Lipgloss
         border_foreground(arr[0])
       else
         # The array needs to have the full union type for the instance variable
-        @border_blend_fg_color = arr.map { |color| color.as(Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) }
-        @props |= Props::BorderForegroundBlend
-        self
+        blend_array = arr.map { |color| color.as(Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) }
+        with_attrs(border_blend_fg_color: blend_array, props: @props | Props::BorderForegroundBlend)
       end
     end
 
     def border_foreground_blend_offset(v : Int32) : Style
-      @border_foreground_blend_offset = v
-      @props |= Props::BorderForegroundBlendOffset
-      self
+      with_attrs(border_foreground_blend_offset: v, props: @props | Props::BorderForegroundBlendOffset)
     end
 
     def border_foreground_blend : Array(Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor)?
@@ -1183,37 +1226,30 @@ module Lipgloss
       return self if colors.empty?
       top, right, bottom, left, ok = which_sides_color(*colors)
       return self unless ok
-      @border_top_bg_color = top
-      @border_right_bg_color = right
-      @border_bottom_bg_color = bottom
-      @border_left_bg_color = left
-      @props |= Props::BorderTopBackground | Props::BorderRightBackground |
-                Props::BorderBottomBackground | Props::BorderLeftBackground
-      self
+      with_attrs(
+        border_top_bg_color: top,
+        border_right_bg_color: right,
+        border_bottom_bg_color: bottom,
+        border_left_bg_color: left,
+        props: @props | Props::BorderTopBackground | Props::BorderRightBackground |
+               Props::BorderBottomBackground | Props::BorderLeftBackground
+      )
     end
 
     def border_top_background(c : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
-      @border_top_bg_color = c
-      @props |= Props::BorderTopBackground
-      self
+      with_attrs(border_top_bg_color: c, props: @props | Props::BorderTopBackground)
     end
 
     def border_right_background(c : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
-      @border_right_bg_color = c
-      @props |= Props::BorderRightBackground
-      self
+      with_attrs(border_right_bg_color: c, props: @props | Props::BorderRightBackground)
     end
 
     def border_bottom_background(c : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
-      @border_bottom_bg_color = c
-      @props |= Props::BorderBottomBackground
-      self
+      with_attrs(border_bottom_bg_color: c, props: @props | Props::BorderBottomBackground)
     end
 
     def border_left_background(c : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
-      @border_left_bg_color = c
-      @props |= Props::BorderLeftBackground
-      self
+      with_attrs(border_left_bg_color: c, props: @props | Props::BorderLeftBackground)
     end
 
     # Other
@@ -1222,39 +1258,27 @@ module Lipgloss
     end
 
     def tab_width(n : Int32) : Style
-      @tab_width = n < -1 ? -1 : n
-      @props |= Props::TabWidth
-      self
+      with_attrs(tab_width: n < -1 ? -1 : n, props: @props | Props::TabWidth)
     end
 
     def transform(fn : Proc(String, String)) : Style
-      @transform = fn
-      @props |= Props::Transform
-      self
+      with_attrs(transform: fn, props: @props | Props::Transform)
     end
 
     def padding_char(char : Char) : Style
-      @padding_char = char
-      @props |= Props::PaddingChar
-      self
+      with_attrs(padding_char: char, props: @props | Props::PaddingChar)
     end
 
     def margin_char(char : Char) : Style
-      @margin_char = char
-      @props |= Props::MarginChar
-      self
+      with_attrs(margin_char: char, props: @props | Props::MarginChar)
     end
 
     def underline_style(style : UnderlineStyle) : Style
-      @underline_style = style
-      @props |= Props::UnderlineStyle
-      self
+      with_attrs(underline_style: style, props: @props | Props::UnderlineStyle)
     end
 
     def underline_color(c : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor) : Style
-      @underline_color = c
-      @props |= Props::UnderlineColor
-      self
+      with_attrs(underline_color: c, props: @props | Props::UnderlineColor)
     end
 
     def underline_color(hex : String) : Style
@@ -1262,10 +1286,7 @@ module Lipgloss
     end
 
     def hyperlink(url : String, params : String = "") : Style
-      @hyperlink_url = url
-      @hyperlink_params = params
-      @props |= Props::Hyperlink
-      self
+      with_attrs(hyperlink_url: url, hyperlink_params: params, props: @props | Props::Hyperlink)
     end
 
     # SetString sets the underlying string value for the style
@@ -1280,8 +1301,7 @@ module Lipgloss
     end
 
     def string=(str : String) : Style
-      @value = str
-      self
+      with_attrs(value: str)
     end
 
     # Go parity helper for SetString.
@@ -2592,8 +2612,13 @@ module Lipgloss
         @margin_top, @margin_right, @margin_bottom, @margin_left, @margin_bg_color,
         @border_style,
         @border_top_fg_color, @border_right_fg_color, @border_bottom_fg_color, @border_left_fg_color,
+        @border_blend_fg_color, @border_foreground_blend_offset,
         @border_top_bg_color, @border_right_bg_color, @border_bottom_bg_color, @border_left_bg_color,
-        @tab_width, @transform
+        @tab_width, @transform,
+        @padding_char, @margin_char,
+        @hyperlink_url, @hyperlink_params,
+        @underline_style, @underline_color,
+        @style_renderer
       )
     end
 
@@ -2612,11 +2637,17 @@ module Lipgloss
       border_right_fg_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil,
       border_bottom_fg_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil,
       border_left_fg_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil,
+      border_blend_fg_color : Array(Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor)?,
+      border_foreground_blend_offset : Int32,
       border_top_bg_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil,
       border_right_bg_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil,
       border_bottom_bg_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil,
       border_left_bg_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil,
       tab_width : Int32, transform : Proc(String, String)?,
+      padding_char : Char, margin_char : Char,
+      hyperlink_url : String?, hyperlink_params : String,
+      underline_style : UnderlineStyle, underline_color : Color | AdaptiveColor | CompleteColor | CompleteAdaptiveColor | NoColor | Nil,
+      style_renderer : StyleRenderer,
     ) : Nil
       @props = props
       @value = value
@@ -2643,12 +2674,21 @@ module Lipgloss
       @border_right_fg_color = border_right_fg_color
       @border_bottom_fg_color = border_bottom_fg_color
       @border_left_fg_color = border_left_fg_color
+      @border_blend_fg_color = border_blend_fg_color
+      @border_foreground_blend_offset = border_foreground_blend_offset
       @border_top_bg_color = border_top_bg_color
       @border_right_bg_color = border_right_bg_color
       @border_bottom_bg_color = border_bottom_bg_color
       @border_left_bg_color = border_left_bg_color
       @tab_width = tab_width
       @transform = transform
+      @padding_char = padding_char
+      @margin_char = margin_char
+      @hyperlink_url = hyperlink_url
+      @hyperlink_params = hyperlink_params
+      @underline_style = underline_style
+      @underline_color = underline_color
+      @style_renderer = style_renderer
     end
 
     # ========== STRING / RENDER ==========
@@ -2915,13 +2955,81 @@ module Lipgloss
     # ========== PRIVATE HELPERS ==========
 
     private def set_bool(prop : Props, v : Bool) : Style
-      @props |= prop
+      # Create a copy with modified bool property
+      new_attrs = if v
+                    @attrs | (1u64 << prop.value.trailing_zeros_count)
+                  else
+                    @attrs & ~(1u64 << prop.value.trailing_zeros_count)
+                  end
+
+      result = Style.new
+      result.copy_from(
+        @props | prop, @value, new_attrs,
+        @fg_color, @bg_color,
+        @width, @height, @max_width, @max_height,
+        @align_horizontal, @align_vertical,
+        @padding_top, @padding_right, @padding_bottom, @padding_left,
+        @margin_top, @margin_right, @margin_bottom, @margin_left, @margin_bg_color,
+        @border_style,
+        @border_top_fg_color, @border_right_fg_color, @border_bottom_fg_color, @border_left_fg_color,
+        @border_blend_fg_color, @border_foreground_blend_offset,
+        @border_top_bg_color, @border_right_bg_color, @border_bottom_bg_color, @border_left_bg_color,
+        @tab_width, @transform,
+        @padding_char, @margin_char,
+        @hyperlink_url, @hyperlink_params,
+        @underline_style, @underline_color,
+        @style_renderer
+      )
+      result
+    end
+
+    private def set_bool_internal(prop : Props, v : Bool) : Nil
+      # Modify self in place (for internal use only)
       if v
         @attrs |= (1u64 << prop.value.trailing_zeros_count)
       else
         @attrs &= ~(1u64 << prop.value.trailing_zeros_count)
       end
-      self
+      @props |= prop
+    end
+
+    private def set_int_internal(prop : Props, value : Int32, & : Int32 ->) : Nil
+      # Modify self in place (for internal use only)
+      actual_value = yield value
+
+      # Set the appropriate instance variable based on prop
+      case prop
+      when Props::Width
+        @width = actual_value
+      when Props::Height
+        @height = actual_value
+      when Props::MaxWidth
+        @max_width = actual_value
+      when Props::MaxHeight
+        @max_height = actual_value
+      when Props::PaddingTop
+        @padding_top = actual_value
+      when Props::PaddingRight
+        @padding_right = actual_value
+      when Props::PaddingBottom
+        @padding_bottom = actual_value
+      when Props::PaddingLeft
+        @padding_left = actual_value
+      when Props::MarginTop
+        @margin_top = actual_value
+      when Props::MarginRight
+        @margin_right = actual_value
+      when Props::MarginBottom
+        @margin_bottom = actual_value
+      when Props::MarginLeft
+        @margin_left = actual_value
+      when Props::TabWidth
+        @tab_width = actual_value
+      when Props::BorderForegroundBlendOffset
+        @border_foreground_blend_offset = actual_value
+      end
+
+      @props |= prop
     end
 
     def get_bool(prop : Props) : Bool
@@ -2943,7 +3051,7 @@ module Lipgloss
 
     private def inherit_bool(prop : Props, other : Style)
       if other.set?(prop)
-        set_bool(prop, other.get_bool(prop))
+        set_bool_internal(prop, other.get_bool(prop))
       end
     end
 

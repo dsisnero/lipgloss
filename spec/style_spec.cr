@@ -15,7 +15,7 @@ describe "Lipgloss parity: style rendering" do
 
     cases.each_with_index do |test_case, index|
       s = test_case[:style].call
-      s.string = "ab c"
+      s = s.string = "ab c"
       s.render.should eq(test_case[:expected]), "case #{index} failed"
     end
   end
@@ -33,7 +33,7 @@ describe "Lipgloss parity: style rendering" do
 
     cases.each_with_index do |test_case, index|
       s = test_case[:style].call
-      s.string = "ab c"
+      s = s.string = "ab c"
       s.render.should eq(test_case[:expected]), "case #{index} failed"
     end
   end
@@ -50,7 +50,7 @@ describe "Lipgloss parity: style rendering" do
 
     cases.each_with_index do |test_case, case_index|
       test_style = test_case[:style]
-      test_style.string = "hello"
+      test_style = test_style.string = "hello"
       test_style.render.should eq(test_case[:expected]), "case #{case_index} failed"
     end
   end
@@ -126,8 +126,7 @@ describe "Lipgloss parity: style rendering" do
 
   it "matches value-copy assignment semantics" do
     style = Lipgloss::Style.new.bold(true)
-    copy = style
-    copy.bold(false)
+    copy = style.bold(false) # Get a new copy without bold
 
     style.bold?.should be_true
     copy.bold?.should be_false
@@ -180,15 +179,15 @@ describe "Lipgloss parity: style rendering" do
   it "supports string value rendering and transforms" do
     Lipgloss::Style.new.render("foo").should eq("foo")
     style_with_string = Lipgloss::Style.new
-    style_with_string.string = "bar"
+    style_with_string = style_with_string.string = "bar"
     style_with_string.render("foo").should eq("bar foo")
 
     bold_with_string = Lipgloss::Style.new.bold(true)
-    bold_with_string.string = "bar"
+    bold_with_string = bold_with_string.string = "bar"
     bold_with_string.render("foo").should eq("\e[1mbar foo\e[m")
 
     multi_string = Lipgloss::Style.new
-    multi_string.string = "bar foobar"
+    multi_string = multi_string.string = "bar foobar"
     multi_string.render("foo").should eq("bar foobar foo")
     Lipgloss::Style.new.margin_right(1).render("foo").should eq("foo ")
     Lipgloss::Style.new.margin_left(1).render("foo").should eq(" foo")
@@ -239,19 +238,19 @@ describe "Lipgloss parity: style rendering" do
     renderer.has_dark_background = true
 
     basic = Lipgloss::Style.new.renderer(renderer).hyperlink("https://example.com")
-    basic.string = "https://example.com"
+    basic = basic.string = "https://example.com"
     basic.render.should eq("\e]8;;https://example.com\ahttps://example.com\e]8;;\a")
 
     with_params = Lipgloss::Style.new.renderer(renderer).hyperlink("https://example.com", "id=123")
-    with_params.string = "example"
+    with_params = with_params.string = "example"
     with_params.render.should eq("\e]8;id=123;https://example.com\aexample\e]8;;\a")
 
     styled_link = Lipgloss::Style.new.renderer(renderer).hyperlink("https://example.com", "id=123").bold(true).foreground(Lipgloss::Color.indexed(234))
-    styled_link.string = "example"
+    styled_link = styled_link.string = "example"
     styled_link.render.should eq("\e]8;id=123;https://example.com\a\e[1;38;5;234mexample\e[m\e]8;;\a")
 
     style = Lipgloss::Style.new.renderer(renderer).hyperlink("https://example.com", "id=123").bold(true).foreground(Lipgloss::Color.indexed(234))
-    style.string = "example"
+    style = style.string = "example"
     style = style.unset_hyperlink
     style.render.should eq("\e[1;38;5;234mexample\e[m")
   end

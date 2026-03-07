@@ -9,7 +9,8 @@
   <a href="docs/coding-guidelines.md">Guidelines</a> &middot;
   <a href="docs/testing.md">Testing</a> &middot;
   <a href="docs/pr-workflow.md">PR Workflow</a> &middot;
-  <a href="docs/porting-parity.md">Porting Parity</a>
+  <a href="docs/porting-parity.md">Porting Parity</a> &middot;
+  <a href="docs/upgrade_guide_v2.md">Upgrade Guide</a>
 </p>
 
 ---
@@ -52,6 +53,10 @@ Lipgloss applies cosmetic styling to terminal output—transforming plain text i
 - **Terminal-aware**: Adaptive rendering based on terminal capabilities
 - **Unicode support**: Proper handling of wide characters and emoji
 
+## Migration from Go Lip Gloss v1
+
+If you're migrating from the Go version of Lip Gloss v1, see the [Upgrade Guide](docs/upgrade_guide_v2.md) for detailed migration instructions, API changes, and code examples.
+
 ## Development
 
 ```bash
@@ -73,6 +78,7 @@ See [Development Guide](docs/development.md) for full setup instructions.
 | [Testing](docs/testing.md) | Test commands and patterns |
 | [PR Workflow](docs/pr-workflow.md) | Commits, PRs, and review process |
 | [Porting Parity](docs/porting-parity.md) | Upstream source tracking from Go v2.0.0 |
+| [Upgrade Guide](docs/upgrade_guide_v2.md) | Migrating from Lip Gloss v1 to v2 |
 
 ## Contributing
 

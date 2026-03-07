@@ -21,7 +21,7 @@ require "./lipgloss/tree"
 require "./lipgloss/list"
 
 module Lipgloss
-  VERSION = "2.0.0-exp"
+  VERSION = "2.0.0"
 
   # Non-breaking space rune.
   NBSP = '\u00A0'

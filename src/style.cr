@@ -6,7 +6,7 @@ require "./view"
 require "uniwidth"
 require "cellwrap"
 require "ansi"
-require "../initialize_with"
+require "./initialize_with"
 
 module Lipgloss
   # Global setting for adaptive colors

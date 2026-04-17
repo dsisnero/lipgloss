@@ -20,7 +20,7 @@ module Lipgloss
         border_tuple = style.border
         border_tuple[0].top.should eq("")
         border_tuple[0].left.should eq("")
-        
+
         # Without border characters, nothing renders
         style.render("test").should eq("test")
       end
@@ -67,7 +67,7 @@ module Lipgloss
         style.border_right?.should be_true
         style.border_bottom?.should be_true
         style.border_left?.should be_true
-        
+
         rendered = style.render("test")
         rendered.should contain("┌")
         rendered.should contain("┐")
@@ -89,18 +89,18 @@ module Lipgloss
 
         original.border_left?.should be_true
         modified.border_left?.should be_false
-        
+
         # Should render differently
         original_rendered = original.render("test")
         modified_rendered = modified.render("test")
-        
+
         # Original has left border (first character after newline is "│")
         original_rendered.should contain("│")
-        
+
         # Modified should not have left border but still has right border
         # The output is: "────┐\ntest│\n────┘"
         # No left border, but right border is still there
-        modified_rendered.should contain("test│") # Right border
+        modified_rendered.should contain("test│")     # Right border
         modified_rendered.should_not contain("│test") # No left border
       end
 
@@ -118,12 +118,12 @@ module Lipgloss
         rendered = style.render("test")
         # Should have right and bottom borders but not left or top
         # Output is: "test│\n────┘"
-        rendered.should contain("┘") # bottom-right corner
+        rendered.should contain("┘")     # bottom-right corner
         rendered.should_not contain("┌") # top-left corner
         rendered.should_not contain("└") # bottom-left corner
         rendered.should_not contain("┐") # top-right corner (no top border)
-        rendered.should contain("│") # right border
-        rendered.should contain("─") # bottom border
+        rendered.should contain("│")     # right border
+        rendered.should contain("─")     # bottom border
       end
     end
   end
